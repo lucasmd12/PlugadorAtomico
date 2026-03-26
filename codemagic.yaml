@@ -16,19 +16,27 @@ workflows:
         script: |
           npm install
 
+      - name: Gerar estrutura Android completa via React Native
+        script: |
+          # Cria um projeto temporário para pegar a estrutura Android gerada pelo RN
+          npx react-native init TempApp --version 0.73.0 --skip-install
+          
+          # Copia os arquivos de infraestrutura do Gradle que estavam faltando
+          cp TempApp/android/gradlew android/
+          cp TempApp/android/gradlew.bat android/
+          cp -r TempApp/android/gradle android/
+          cp TempApp/android/build.gradle android/build.gradle.rn
+          cp TempApp/android/settings.gradle android/settings.gradle
+          
+          # Limpa o projeto temporário
+          rm -rf TempApp
+          
+          # Garante permissão de execução
+          chmod +x android/gradlew
+
       - name: Instalar dependências extras
         script: |
           npm install react-native-audio-recorder-player react-native-fs
-
-      - name: Garantir que o gradlew existe e tem permissão
-        script: |
-          # Se o gradlew não foi commitado, gera ele agora via gradle wrapper
-          if [ ! -f android/gradlew ]; then
-            cd android
-            gradle wrapper --gradle-version 8.0.1
-            cd ..
-          fi
-          chmod +x android/gradlew
 
       - name: Build APK Profile
         script: |
