@@ -12,33 +12,30 @@ workflows:
         script: |
           git submodule update --init --recursive
 
-      - name: Instalar dependências Node
+      - name: Instalar dependências Node primeiro
         script: |
           npm install
           npm install react-native-audio-recorder-player react-native-fs
 
-      - name: Criar arquivos raiz do Android que estão faltando
+      - name: Criar arquivos raiz do Android
         script: |
-          # settings.gradle — diz pro Gradle o nome do app e onde está o módulo app
           cat > android/settings.gradle << 'GRADLE'
           pluginManagement {
+              includeBuild("../node_modules/@react-native/gradle-plugin")
               repositories {
                   google()
                   mavenCentral()
                   gradlePluginPortal()
               }
           }
-          dependencyResolutionManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
+          plugins { id("com.facebook.react.settings") }
+          extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+              ex.autolinkLibrariesFromCommand()
           }
           rootProject.name = 'PlugadorAtomico'
           include ':app'
           GRADLE
 
-          # build.gradle raiz — configuração global do projeto Android
           cat > android/build.gradle << 'GRADLE'
           buildscript {
               ext {
@@ -56,19 +53,16 @@ workflows:
               dependencies {
                   classpath("com.android.tools.build:gradle:8.1.1")
                   classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-                  classpath("com.facebook.react:react-native-gradle-plugin")
               }
           }
           GRADLE
 
-          # gradle.properties — configurações de performance do Gradle
           cat > android/gradle.properties << 'PROPS'
           org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m
           android.useAndroidX=true
           android.enableJetifier=true
           PROPS
 
-          # Cria o gradle wrapper
           mkdir -p android/gradle/wrapper
           cat > android/gradle/wrapper/gradle-wrapper.properties << 'PROPS'
           distributionBase=GRADLE_USER_HOME
@@ -78,12 +72,11 @@ workflows:
           zipStorePath=wrapper/dists
           PROPS
 
-          # Baixa e instala o gradlew via gradle system
-          cd android
-          gradle wrapper --gradle-version 8.1.1
-          chmod +x gradlew
+          # Baixa o gradlew diretamente sem precisar do gradle instalado
+          curl -L https://raw.githubusercontent.com/gradle/gradle/v8.1.1/gradlew -o android/gradlew
+          chmod +x android/gradlew
 
-      - name: Criar GpsModule e OverlayModule que estavam faltando
+      - name: Criar GpsModule e OverlayModule faltando
         script: |
           cat > android/app/src/main/java/com/plugadoratomico/gps/GpsModule.kt << 'KT'
           package com.plugadoratomico.gps
@@ -161,4 +154,3 @@ workflows:
 
     artifacts:
       - android/app/build/outputs/apk/profile/*.apk
-
