@@ -1,3 +1,4 @@
+
 workflows:
   plugador-profile:
     name: Plugador Atômico — Profile APK
@@ -23,8 +24,8 @@ workflows:
           cp TempPlugador/android/gradlew.bat android/
           cp -r TempPlugador/android/gradle android/
           cp TempPlugador/android/settings.gradle android/
-          # AGORA copia o build.gradle raiz corretamente (sem sufixo .root)
           cp TempPlugador/android/build.gradle android/build.gradle
+          cp TempPlugador/android/gradle.properties android/gradle.properties
           sed -i "s/TempPlugador/PlugadorAtomico/g" android/settings.gradle
           chmod +x android/gradlew
           rm -rf TempPlugador
