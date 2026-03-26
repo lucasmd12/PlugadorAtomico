@@ -13,7 +13,7 @@ workflows:
 
       - name: Instalar dependências Node
         script: |
-          npm install
+          npm install --legacy-peer-deps
 
       - name: Gerar infraestrutura Gradle (gradlew, wrapper, settings)
         script: |
