@@ -15,26 +15,31 @@ class SmsReceiver : BroadcastReceiver() {
 
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
         val fullBody = messages.joinToString("") { it.messageBody }
+        val sender = messages.first().originatingAddress ?: ""
 
-        // Só processa mensagens do nosso app — ignora todo o resto
+        // Ignora qualquer SMS que não seja do nosso app
         if (!fullBody.startsWith("[MSG]") &&
             !fullBody.startsWith("[VOZ]") &&
             !fullBody.startsWith("[GPS]")) return
 
-        // Aborta o broadcast para que o SMS não apareça no app de mensagens padrão
+        // Aborta o broadcast — o SMS não aparece no app de mensagens padrão
         abortBroadcast()
 
-        // Envia o evento para o React Native processar
-        val reactApp = context.applicationContext as? ReactApplication ?: return
-        val reactContext = reactApp.reactNativeHost.reactInstanceManager.currentReactContext ?: return
+        val reactApp = context.applicationContext as? ReactApplication
+        val reactContext = reactApp?.reactNativeHost?.reactInstanceManager?.currentReactContext
 
-        val params = Arguments.createMap().apply {
-            putString("body", fullBody)
-            putString("sender", messages.first().originatingAddress ?: "")
+        if (reactContext != null) {
+            // App está aberto — entrega direto pro JavaScript
+            val params = Arguments.createMap().apply {
+                putString("body", fullBody)
+                putString("sender", sender)
+            }
+            reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+                .emit("SMS_RECEIVED", params)
+        } else {
+            // App está fechado — guarda na fila para entregar quando abrir
+            SmsQueue.add(fullBody, sender)
         }
-
-        reactContext
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-            .emit("SMS_RECEIVED", params)
     }
 }
