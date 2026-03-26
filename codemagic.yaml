@@ -6,32 +6,11 @@ workflows:
 
     environment:
       node: v18.0.0
-      vars:
-        ANDROID_NDK_VERSION: "25.2.9519653"
-        BUILD_THREADS: "4"
 
     scripts:
       - name: Inicializar submódulo Codec2
         script: |
           git submodule update --init --recursive
-
-      - name: Instalar NDK via sdkmanager
-        script: |
-          echo "y" | sdkmanager --install "ndk;$ANDROID_NDK_VERSION"
-
-      - name: Descobrir caminho real do NDK
-        script: |
-          # Tenta os caminhos mais comuns do Codemagic e exporta o correto
-          if [ -d "$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" ]; then
-            echo "export NDK_PATH=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> $CM_ENV
-          elif [ -d "$ANDROID_HOME/ndk-bundle" ]; then
-            echo "export NDK_PATH=$ANDROID_HOME/ndk-bundle" >> $CM_ENV
-          else
-            # Busca automaticamente qualquer NDK instalado
-            NDK_FOUND=$(find $ANDROID_HOME/ndk -maxdepth 1 -type d | grep -v "^$ANDROID_HOME/ndk$" | head -1)
-            echo "export NDK_PATH=$NDK_FOUND" >> $CM_ENV
-          fi
-          echo "NDK encontrado em: $NDK_PATH"
 
       - name: Instalar dependências Node
         script: |
@@ -41,21 +20,7 @@ workflows:
         script: |
           npm install react-native-audio-recorder-player react-native-fs
 
-      - name: Compilar Codec2 via NDK para ARM64
-        script: |
-          echo "Usando NDK em: $NDK_PATH"
-          cd android/app/src/main/cpp
-          mkdir -p build && cd build
-          cmake .. \
-            -DCMAKE_TOOLCHAIN_FILE=$NDK_PATH/build/cmake/android.toolchain.cmake \
-            -DANDROID_ABI="arm64-v8a" \
-            -DANDROID_PLATFORM=android-21 \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCODEC2_BUILD_EXAMPLES=OFF \
-            -DCODEC2_BUILD_TESTS=OFF
-          make -j$BUILD_THREADS
-
-      - name: Build APK Profile (sem keystore)
+      - name: Build APK Profile
         script: |
           cd android
           chmod +x gradlew
