@@ -1,0 +1,41 @@
+workflows:
+  plugador-profile:
+    name: Plugador Atômico — Profile APK
+    max_build_duration: 60
+
+    environment:
+      node: v18.0.0
+
+    scripts:
+      - name: Inicializar submódulo Codec2
+        script: |
+          git submodule update --init --recursive
+
+      - name: Instalar dependências Node
+        script: |
+          npm install
+
+      - name: Gerar infraestrutura Gradle (gradlew, settings, gradle wrapper)
+        script: |
+          npx react-native init TempPlugador --version 0.73.0 --skip-install
+          cp TempPlugador/android/gradlew android/
+          cp TempPlugador/android/gradlew.bat android/
+          cp -r TempPlugador/android/gradle android/
+          cp TempPlugador/android/settings.gradle android/
+          cp TempPlugador/android/build.gradle android/build.gradle
+          cp TempPlugador/android/gradle.properties android/gradle.properties
+          # Copia metro.config.js se não existir no repo
+          [ -f metro.config.js ] || cp TempPlugador/metro.config.js .
+          sed -i "s/TempPlugador/PlugadorAtomico/g" android/settings.gradle
+          chmod +x android/gradlew
+          rm -rf TempPlugador
+
+      - name: Build APK Profile
+        script: |
+          cd android
+          ./gradlew assembleProfile \
+            --no-daemon \
+            --stacktrace
+
+    artifacts:
+      - android/app/build/outputs/apk/profile/*.apk

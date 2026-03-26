@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bolha flutuante compacta que fica sobre todos os apps -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#CC1a1a2e"
+    android:padding="12dp"
+    android:elevation="8dp">
+
+    <!-- Botão PTT compacto -->
+    <Button
+        android:id="@+id/btn_ptt_overlay"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:text="🎙"
+        android:textSize="24sp"
+        android:background="#e94560"
+        android:layout_marginBottom="4dp"/>
+
+    <!-- Indicador de mensagens não lidas -->
+    <TextView
+        android:id="@+id/tv_unread"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 msg"
+        android:textColor="#ffffff"
+        android:textSize="10sp"
+        android:layout_gravity="center"/>
+
+</LinearLayout>

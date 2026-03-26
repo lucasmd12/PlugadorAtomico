@@ -1,0 +1,3 @@
+[submodule "android/app/src/main/cpp/codec2"]
+    path = android/app/src/main/cpp/codec2
+    url = https://github.com/drowe67/codec2
