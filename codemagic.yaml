@@ -1,4 +1,3 @@
-
 workflows:
   plugador-profile:
     name: Plugador Atômico — Profile APK
@@ -12,69 +11,30 @@ workflows:
         script: |
           git submodule update --init --recursive
 
-      - name: Instalar dependências Node primeiro
+      - name: Instalar dependências Node
         script: |
           npm install
           npm install react-native-audio-recorder-player react-native-fs
 
-      - name: Criar arquivos raiz do Android
+      - name: Gerar projeto Android completo via React Native CLI
         script: |
-          cat > android/settings.gradle << 'GRADLE'
-          pluginManagement {
-              includeBuild("../node_modules/@react-native/gradle-plugin")
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
-          plugins { id("com.facebook.react.settings") }
-          extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
-              ex.autolinkLibrariesFromCommand()
-          }
-          rootProject.name = 'PlugadorAtomico'
-          include ':app'
-          GRADLE
-
-          cat > android/build.gradle << 'GRADLE'
-          buildscript {
-              ext {
-                  buildToolsVersion = "34.0.0"
-                  minSdkVersion = 21
-                  compileSdkVersion = 34
-                  targetSdkVersion = 34
-                  ndkVersion = "25.2.9519653"
-                  kotlinVersion = "1.9.0"
-              }
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath("com.android.tools.build:gradle:8.1.1")
-                  classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-              }
-          }
-          GRADLE
-
-          cat > android/gradle.properties << 'PROPS'
-          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m
-          android.useAndroidX=true
-          android.enableJetifier=true
-          PROPS
-
-          mkdir -p android/gradle/wrapper
-          cat > android/gradle/wrapper/gradle-wrapper.properties << 'PROPS'
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.1.1-all.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists
-          PROPS
-
-          # Baixa o gradlew diretamente sem precisar do gradle instalado
-          curl -L https://raw.githubusercontent.com/gradle/gradle/v8.1.1/gradlew -o android/gradlew
+          # O jeito mais confiável — deixa o próprio React Native gerar
+          # a pasta android completa com gradlew e tudo mais
+          npx react-native init TempPlugador --version 0.73.0 --skip-install
+          
+          # Copia só a infraestrutura que falta — não sobrescreve nossos arquivos
+          cp TempPlugador/android/gradlew android/
+          cp TempPlugador/android/gradlew.bat android/
+          cp -r TempPlugador/android/gradle android/
+          cp TempPlugador/android/settings.gradle android/
+          cp TempPlugador/android/build.gradle android/build.gradle.root
+          
+          # O build.gradle raiz do TempPlugador tem o nome errado do app
+          # Corrige o nome do projeto no settings.gradle
+          sed -i "s/TempPlugador/PlugadorAtomico/g" android/settings.gradle
+          
           chmod +x android/gradlew
+          rm -rf TempPlugador
 
       - name: Criar GpsModule e OverlayModule faltando
         script: |
