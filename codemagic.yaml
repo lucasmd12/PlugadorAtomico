@@ -16,25 +16,72 @@ workflows:
           npm install
           npm install react-native-audio-recorder-player react-native-fs
 
-      - name: Gerar projeto Android completo via React Native CLI
+      - name: Gerar infraestrutura Android via React Native CLI
         script: |
-          # O jeito mais confiável — deixa o próprio React Native gerar
-          # a pasta android completa com gradlew e tudo mais
           npx react-native init TempPlugador --version 0.73.0 --skip-install
-          
-          # Copia só a infraestrutura que falta — não sobrescreve nossos arquivos
           cp TempPlugador/android/gradlew android/
           cp TempPlugador/android/gradlew.bat android/
           cp -r TempPlugador/android/gradle android/
           cp TempPlugador/android/settings.gradle android/
-          cp TempPlugador/android/build.gradle android/build.gradle.root
-          
-          # O build.gradle raiz do TempPlugador tem o nome errado do app
-          # Corrige o nome do projeto no settings.gradle
           sed -i "s/TempPlugador/PlugadorAtomico/g" android/settings.gradle
-          
           chmod +x android/gradlew
           rm -rf TempPlugador
+
+      - name: Corrigir build.gradle do app com namespace
+        script: |
+          cat > android/app/build.gradle << 'GRADLE'
+          apply plugin: "com.android.application"
+          apply plugin: "org.jetbrains.kotlin.android"
+          apply plugin: "com.facebook.react"
+
+          android {
+              namespace "com.plugadoratomico"
+              ndkVersion "25.2.9519653"
+              compileSdk 34
+
+              defaultConfig {
+                  applicationId "com.plugadoratomico"
+                  minSdk 21
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0"
+
+                  externalNativeBuild {
+                      cmake {
+                          cppFlags "-std=c++17"
+                          abiFilters "arm64-v8a"
+                      }
+                  }
+              }
+
+              externalNativeBuild {
+                  cmake {
+                      path "src/main/cpp/CMakeLists.txt"
+                      version "3.22.1"
+                  }
+              }
+
+              buildTypes {
+                  debug {
+                      debuggable true
+                  }
+                  profile {
+                      initWith(buildTypes.debug)
+                      debuggable false
+                      matchingFallbacks = ['debug', 'release']
+                  }
+                  release {
+                      minifyEnabled true
+                      proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+                  }
+              }
+          }
+
+          dependencies {
+              implementation("com.facebook.react:react-android")
+              implementation("com.facebook.react:hermes-android")
+          }
+          GRADLE
 
       - name: Criar GpsModule e OverlayModule faltando
         script: |
