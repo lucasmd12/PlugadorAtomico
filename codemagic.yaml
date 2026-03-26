@@ -20,10 +20,19 @@ workflows:
         script: |
           npm install react-native-audio-recorder-player react-native-fs
 
+      - name: Garantir que o gradlew existe e tem permissão
+        script: |
+          # Se o gradlew não foi commitado, gera ele agora via gradle wrapper
+          if [ ! -f android/gradlew ]; then
+            cd android
+            gradle wrapper --gradle-version 8.0.1
+            cd ..
+          fi
+          chmod +x android/gradlew
+
       - name: Build APK Profile
         script: |
           cd android
-          chmod +x gradlew
           ./gradlew assembleProfile \
             --no-daemon \
             --stacktrace
