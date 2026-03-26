@@ -1,5 +1,4 @@
 
-cat > codemagic.yaml << 'EOF'
 workflows:
   plugador-profile:
     name: Plugador Atômico — Profile APK
@@ -162,4 +161,4 @@ workflows:
 
     artifacts:
       - android/app/build/outputs/apk/profile/*.apk
-EOF
+
