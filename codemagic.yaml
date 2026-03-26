@@ -1,4 +1,5 @@
 
+cat > codemagic.yaml << 'EOF'
 workflows:
   plugador-profile:
     name: Plugador Atômico — Profile APK
@@ -15,20 +16,142 @@ workflows:
       - name: Instalar dependências Node
         script: |
           npm install
-
-      - name: Instalar dependências extras
-        script: |
           npm install react-native-audio-recorder-player react-native-fs
 
-      - name: Garantir que o gradlew existe e tem permissão
+      - name: Criar arquivos raiz do Android que estão faltando
         script: |
-          # Se o gradlew não foi commitado, gera ele agora via gradle wrapper
-          if [ ! -f android/gradlew ]; then
-            cd android
-            gradle wrapper --gradle-version 8.0.1
-            cd ..
-          fi
-          chmod +x android/gradlew
+          # settings.gradle — diz pro Gradle o nome do app e onde está o módulo app
+          cat > android/settings.gradle << 'GRADLE'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = 'PlugadorAtomico'
+          include ':app'
+          GRADLE
+
+          # build.gradle raiz — configuração global do projeto Android
+          cat > android/build.gradle << 'GRADLE'
+          buildscript {
+              ext {
+                  buildToolsVersion = "34.0.0"
+                  minSdkVersion = 21
+                  compileSdkVersion = 34
+                  targetSdkVersion = 34
+                  ndkVersion = "25.2.9519653"
+                  kotlinVersion = "1.9.0"
+              }
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath("com.android.tools.build:gradle:8.1.1")
+                  classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+                  classpath("com.facebook.react:react-native-gradle-plugin")
+              }
+          }
+          GRADLE
+
+          # gradle.properties — configurações de performance do Gradle
+          cat > android/gradle.properties << 'PROPS'
+          org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m
+          android.useAndroidX=true
+          android.enableJetifier=true
+          PROPS
+
+          # Cria o gradle wrapper
+          mkdir -p android/gradle/wrapper
+          cat > android/gradle/wrapper/gradle-wrapper.properties << 'PROPS'
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.1.1-all.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          PROPS
+
+          # Baixa e instala o gradlew via gradle system
+          cd android
+          gradle wrapper --gradle-version 8.1.1
+          chmod +x gradlew
+
+      - name: Criar GpsModule e OverlayModule que estavam faltando
+        script: |
+          cat > android/app/src/main/java/com/plugadoratomico/gps/GpsModule.kt << 'KT'
+          package com.plugadoratomico.gps
+          import android.content.Intent
+          import android.os.Build
+          import com.facebook.react.bridge.*
+          class GpsModule(private val reactContext: ReactApplicationContext)
+              : ReactContextBaseJavaModule(reactContext) {
+              override fun getName() = "GpsModule"
+              @ReactMethod
+              fun startService(options: ReadableMap) {
+                  val intent = Intent(reactContext, GpsService::class.java).apply {
+                      putExtra("targetPhone", options.getString("targetPhone"))
+                      putExtra("intervalMs", options.getDouble("intervalMs").toLong())
+                  }
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                      reactContext.startForegroundService(intent)
+                  } else {
+                      reactContext.startService(intent)
+                  }
+              }
+              @ReactMethod
+              fun stopService() {
+                  reactContext.stopService(Intent(reactContext, GpsService::class.java))
+              }
+              @ReactMethod
+              fun requestSingleUpdate() {
+                  val intent = Intent(reactContext, GpsService::class.java).apply {
+                      putExtra("singleUpdate", true)
+                  }
+                  reactContext.startService(intent)
+              }
+          }
+          KT
+
+          cat > android/app/src/main/java/com/plugadoratomico/overlay/OverlayModule.kt << 'KT'
+          package com.plugadoratomico.overlay
+          import android.content.Intent
+          import android.net.Uri
+          import android.os.Build
+          import android.provider.Settings
+          import com.facebook.react.bridge.*
+          class OverlayModule(private val reactContext: ReactApplicationContext)
+              : ReactContextBaseJavaModule(reactContext) {
+              override fun getName() = "OverlayModule"
+              @ReactMethod
+              fun requestOverlayPermission() {
+                  val intent = Intent(
+                      Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                      Uri.parse("package:${reactContext.packageName}")
+                  ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                  reactContext.startActivity(intent)
+              }
+              @ReactMethod
+              fun startOverlay() {
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                      reactContext.startForegroundService(Intent(reactContext, OverlayService::class.java))
+                  } else {
+                      reactContext.startService(Intent(reactContext, OverlayService::class.java))
+                  }
+              }
+              @ReactMethod
+              fun stopOverlay() {
+                  reactContext.stopService(Intent(reactContext, OverlayService::class.java))
+              }
+          }
+          KT
 
       - name: Build APK Profile
         script: |
@@ -39,3 +162,4 @@ workflows:
 
     artifacts:
       - android/app/build/outputs/apk/profile/*.apk
+EOF
