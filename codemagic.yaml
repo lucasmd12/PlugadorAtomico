@@ -1,3 +1,4 @@
+
 workflows:
   plugador-profile:
     name: Plugador Atômico — Profile APK
@@ -17,20 +18,32 @@ workflows:
       - name: Instalar NDK via sdkmanager
         script: |
           echo "y" | sdkmanager --install "ndk;$ANDROID_NDK_VERSION"
-          echo "NDK instalado em: $ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
-          ls $ANDROID_HOME/ndk/
+
+      - name: Descobrir caminho real do NDK
+        script: |
+          # Tenta os caminhos mais comuns do Codemagic e exporta o correto
+          if [ -d "$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" ]; then
+            echo "export NDK_PATH=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> $CM_ENV
+          elif [ -d "$ANDROID_HOME/ndk-bundle" ]; then
+            echo "export NDK_PATH=$ANDROID_HOME/ndk-bundle" >> $CM_ENV
+          else
+            # Busca automaticamente qualquer NDK instalado
+            NDK_FOUND=$(find $ANDROID_HOME/ndk -maxdepth 1 -type d | grep -v "^$ANDROID_HOME/ndk$" | head -1)
+            echo "export NDK_PATH=$NDK_FOUND" >> $CM_ENV
+          fi
+          echo "NDK encontrado em: $NDK_PATH"
 
       - name: Instalar dependências Node
         script: |
           npm install
 
-      - name: Instalar dependências extras do React Native
+      - name: Instalar dependências extras
         script: |
           npm install react-native-audio-recorder-player react-native-fs
 
       - name: Compilar Codec2 via NDK para ARM64
         script: |
-          NDK_PATH=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION
+          echo "Usando NDK em: $NDK_PATH"
           cd android/app/src/main/cpp
           mkdir -p build && cd build
           cmake .. \
