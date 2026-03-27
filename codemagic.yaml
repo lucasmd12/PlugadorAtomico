@@ -1,0 +1,59 @@
+workflows:
+  plugador-profile:
+    name: Plugador Atômico — Profile APK
+    max_build_duration: 60
+
+    environment:
+      node: 18
+      java: 17
+      vars:
+        LANG: "en_US.UTF-8"
+        LC_ALL: "en_US.UTF-8"
+
+    scripts:
+      - name: Inicializar submódulo Codec2
+        script: |
+          git submodule update --init --recursive
+
+      - name: Instalar dependências Node
+        script: |
+          npm install
+
+      - name: Gerar debug keystore
+        script: |
+          keytool -genkey -v \
+            -keystore android/app/debug.keystore \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Gerar bundle JS
+        script: |
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
+      - name: Build APK Profile
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleProfile --no-daemon --stacktrace
+
+    artifacts:
+      - android/app/build/outputs/apk/profile/*.apk
+
+    publishing:
+      email:
+        recipients:
+          - seu-email@gmail.com
+        notify:
+          success: true
+          failure: true
