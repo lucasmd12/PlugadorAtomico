@@ -54,6 +54,7 @@ workflows:
         script: |
           cd android
           chmod +x gradlew
+          chmod 644 gradle/wrapper/gradle-wrapper.jar
           ./gradlew assembleProfile --no-daemon --stacktrace
 
     artifacts:
