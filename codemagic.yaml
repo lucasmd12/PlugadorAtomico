@@ -41,6 +41,14 @@ workflows:
             --bundle-output android/app/src/main/assets/index.android.bundle \
             --assets-dest android/app/src/main/res
 
+      - name: Instalar Gradle wrapper real
+        script: |
+          mkdir -p android/gradle/wrapper
+          curl -L https://services.gradle.org/distributions/gradle-8.1.1-bin.zip -o gradle.zip
+          unzip -q gradle.zip
+          cp gradle-8.1.1/lib/gradle-wrapper.jar android/gradle/wrapper/gradle-wrapper.jar
+          rm -rf gradle.zip gradle-8.1.1
+
       - name: Build APK Profile
         script: |
           cd android
