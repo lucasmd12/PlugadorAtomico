@@ -1,4 +1,3 @@
-
 workflows:
   plugador-profile:
     name: Plugador Atômico — Profile APK
@@ -11,6 +10,13 @@ workflows:
         LANG: "en_US.UTF-8"
         LC_ALL: "en_US.UTF-8"
 
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: '*'
+          include: true
+
     scripts:
       - name: Inicializar submódulo Codec2
         script: |
@@ -19,14 +25,6 @@ workflows:
       - name: Instalar dependências Node
         script: |
           npm install
-
-      - name: Baixar gradle-wrapper.jar real
-        script: |
-          mkdir -p android/gradle/wrapper
-          curl -L https://services.gradle.org/distributions/gradle-8.1.1-bin.zip -o gradle.zip
-          unzip -q gradle.zip
-          cp gradle-8.1.1/lib/gradle-wrapper.jar android/gradle/wrapper/gradle-wrapper.jar
-          rm -rf gradle.zip gradle-8.1.1
 
       - name: Gerar debug keystore
         script: |
@@ -50,15 +48,24 @@ workflows:
             --bundle-output android/app/src/main/assets/index.android.bundle \
             --assets-dest android/app/src/main/res
 
+      - name: Setup Gradle 8.1.1
+        script: |
+          wget https://services.gradle.org/distributions/gradle-8.1.1-bin.zip
+          unzip -q gradle-8.1.1-bin.zip
+          export PATH=$PWD/gradle-8.1.1/bin:$PATH
+          gradle --version
+
       - name: Build APK Profile
         script: |
+          export PATH=$PWD/gradle-8.1.1/bin:$PATH
           cd android
+          gradle wrapper --gradle-version 8.1.1
           chmod +x gradlew
-          chmod 644 gradle/wrapper/gradle-wrapper.jar
           ./gradlew assembleProfile --no-daemon --stacktrace
+          find app/build/outputs/apk -name "*.apk" -exec ls -lh {} \;
 
     artifacts:
-      - android/app/build/outputs/apk/profile/*.apk
+      - android/app/build/outputs/apk/**/*.apk
 
     publishing:
       email:
