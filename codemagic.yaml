@@ -45,6 +45,7 @@ workflows:
         script: |
           cd android
           chmod +x gradlew
+          chmod +x gradle/wrapper/gradle-wrapper.jar
           ./gradlew assembleProfile --no-daemon --stacktrace
 
     artifacts:
@@ -53,7 +54,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - seu-email@gmail.com
+          - loggergray@gmail.com
         notify:
           success: true
           failure: true
