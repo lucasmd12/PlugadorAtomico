@@ -18,9 +18,11 @@ workflows:
           include: true
 
     scripts:
-      - name: Inicializar submódulo Codec2
+      - name: Clonar Codec2
         script: |
-          git submodule update --init --recursive
+          rm -rf android/app/src/main/cpp/codec2
+          git clone https://github.com/drowe67/codec2.git \
+            android/app/src/main/cpp/codec2
 
       - name: Instalar dependências Node
         script: |
@@ -65,7 +67,7 @@ workflows:
           find app/build/outputs/apk -name "*.apk" -exec ls -lh {} \;
 
     artifacts:
-      - android/app/build/outputs/apk/**/*.apk
+      - android/app/build/outputs/apk/profile/*.apk
 
     publishing:
       email:
