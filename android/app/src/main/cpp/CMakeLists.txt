@@ -32,7 +32,7 @@ set(CODEC2_SOURCES
     codec2/src/dump.c
     codec2/src/newamp1.c
     codec2/src/mbest.c
-    codec2/src/machdep.c
+    
 )
 
 add_library(
