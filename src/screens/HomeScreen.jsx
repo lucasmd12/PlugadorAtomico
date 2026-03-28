@@ -1,83 +1,194 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  FlatList, StyleSheet, NativeModules
+  FlatList, StyleSheet, NativeModules, Image
 } from 'react-native';
-import { initMessageRouter } from '../services/MessageRouter';
+import { initMessageRouter, initSentListener, markAsRead } from '../services/MessageRouter';
 import { startTracking, stopTracking, sendLocationOnce } from '../services/LocationTracker';
 import AudioRecorder from '../services/AudioRecorder';
+import { getAllMessages, getProfile, saveMessage } from '../services/Database';
 
 const { SmsSender } = NativeModules;
 
 export default function HomeScreen({ targetPhone }) {
-  const [messages, setMessages] = useState([]);
-  const [inputText, setInputText] = useState('');
+  const [messages,      setMessages]      = useState([]);
+  const [inputText,     setInputText]     = useState('');
   const [theirLocation, setTheirLocation] = useState(null);
-  const [myLocation, setMyLocation] = useState(null);
-  const [isTracking, setIsTracking] = useState(false);
-  const [isPressing, setIsPressing] = useState(false); // PTT pressionado
+  const [myLocation,    setMyLocation]    = useState(null);
+  const [isTracking,    setIsTracking]    = useState(false);
+  const [isPressing,    setIsPressing]    = useState(false);
+  const [profile,       setProfile]       = useState(null);
   const flatListRef = useRef();
 
+  // ─── Inicialização ────────────────────────────────────────────────────────
+
   useEffect(() => {
-    // Inicializa o roteador de mensagens — escuta SMS chegando
-    const cleanup = initMessageRouter({
-      onText: ({ text, sender }) => {
-        addMessage({ type: 'text', text, from: 'them' });
-      },
-      onVoice: async ({ audioBase64 }) => {
-        // Descomprime e toca o áudio recebido
-        const pcmBase64 = await NativeModules.Codec2Module.decode(audioBase64);
-        AudioRecorder.play(pcmBase64);
-        addMessage({ type: 'voice', from: 'them' });
-      },
-      onGps: ({ lat, lng }) => {
+    loadHistory();
+    loadProfile();
+
+    // Escuta mensagens recebidas em tempo real
+    const cleanupRouter = initMessageRouter({
+      onText:  ({ id, text })        => addMessage({ id, type: 'MSG', payload: text,      direction: 'received', status: 'received' }),
+      onVoice: ({ id, audioBase64 }) => handleIncomingVoice(id, audioBase64),
+      onGps:   ({ id, lat, lng })    => {
         setTheirLocation({ lat, lng });
-      }
+        addMessage({ id, type: 'GPS', lat, lng, direction: 'received', status: 'received' });
+      },
     });
 
-    return cleanup;
+    // Escuta confirmações de envio para atualizar o banco
+    const cleanupSent = initSentListener();
+
+    return () => {
+      cleanupRouter();
+      cleanupSent();
+    };
   }, []);
 
+  async function loadHistory() {
+    const rows = await getAllMessages();
+    setMessages(rows.map(normalizeRow));
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
+  }
+
+  async function loadProfile() {
+    const p = await getProfile();
+    setProfile(p);
+  }
+
+  // Converte linha do banco para o formato usado pelo FlatList
+  function normalizeRow(row) {
+    return {
+      id:        row.id,
+      type:      row.type,
+      direction: row.direction,
+      payload:   row.payload,
+      lat:       row.lat,
+      lng:       row.lng,
+      status:    row.status,
+      createdAt: row.created_at,
+    };
+  }
+
+  // ─── Mensagens ────────────────────────────────────────────────────────────
+
   function addMessage(msg) {
-    setMessages(prev => [...prev, { ...msg, id: Date.now().toString() }]);
-    setTimeout(() => flatListRef.current?.scrollToEnd(), 100);
+    setMessages(prev => [...prev, { ...msg, createdAt: Date.now() }]);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+  }
+
+  async function handleIncomingVoice(id, audioBase64) {
+    const pcmBase64 = await NativeModules.Codec2Module.decode(audioBase64);
+    AudioRecorder.play(pcmBase64);
+    addMessage({ id, type: 'VOZ', direction: 'received', status: 'received' });
   }
 
   async function sendText() {
     if (!inputText.trim()) return;
     await SmsSender.sendText(targetPhone, inputText);
-    addMessage({ type: 'text', text: inputText, from: 'me' });
+    // A persistência ocorre via evento SMS_SENT no initSentListener,
+    // mas adicionamos ao estado local imediatamente para feedback visual
+    addMessage({ id: `local-${Date.now()}`, type: 'MSG', payload: inputText, direction: 'sent', status: 'sent' });
     setInputText('');
   }
 
-  // PTT — grava enquanto segura, envia quando solta
   async function onPttRelease() {
     setIsPressing(false);
     const audioBase64 = await AudioRecorder.stopAndEncode();
-    if (audioBase64) {
-      await SmsSender.sendVoice(targetPhone, audioBase64);
-      addMessage({ type: 'voice', from: 'me' });
-    }
+    if (!audioBase64) return;
+    await SmsSender.sendVoice(targetPhone, audioBase64);
+    addMessage({ id: `local-${Date.now()}`, type: 'VOZ', direction: 'sent', status: 'sent' });
   }
+
+  // Marca todas as mensagens recebidas como lidas ao abrir o chat
+  useEffect(() => {
+    messages
+      .filter(m => m.direction === 'received' && m.status === 'received')
+      .forEach(m => markAsRead(m.id));
+  }, [messages]);
+
+  // ─── GPS ──────────────────────────────────────────────────────────────────
 
   function toggleTracking() {
     if (isTracking) {
       stopTracking();
       setIsTracking(false);
     } else {
-      startTracking({
-        targetPhone,
-        intervalMs: 15000, // 15 segundos — configurável futuramente
-        onMyLocation: setMyLocation
-      });
+      startTracking({ targetPhone, intervalMs: 15000, onMyLocation: setMyLocation });
       setIsTracking(true);
     }
   }
 
-  return (
-    <View style={styles.container}>
+  // ─── Renderização das bolhas ───────────────────────────────────────────────
 
-      {/* Mapa simplificado — mostra coordenadas até integrar OpenStreetMap offline */}
+  function renderMessage({ item }) {
+    const isMe = item.direction === 'sent';
+
+    let content = null;
+    if (item.type === 'MSG') {
+      content = <Text style={styles.bubbleText}>{item.payload}</Text>;
+    } else if (item.type === 'VOZ') {
+      content = <Text style={styles.bubbleText}>🎙 Mensagem de voz</Text>;
+    } else if (item.type === 'GPS') {
+      content = (
+        <Text style={styles.bubbleText}>
+          📍 {item.lat?.toFixed(4)}, {item.lng?.toFixed(4)}
+        </Text>
+      );
+    } else if (item.type === 'IMG') {
+      content = item.payload
+        ? <Image source={{ uri: `data:image/jpeg;base64,${item.payload}` }} style={styles.bubbleImage} />
+        : <Text style={styles.bubbleText}>🖼 Imagem</Text>;
+    }
+
+    return (
+      <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
+        {content}
+        <View style={styles.bubbleMeta}>
+          <Text style={styles.bubbleTime}>
+            {formatTime(item.createdAt)}
+          </Text>
+          {isMe && (
+            <Text style={styles.bubbleStatus}>
+              {item.status === 'sending' ? '⏳' :
+               item.status === 'sent'    ? '✓'  :
+               item.status === 'error'   ? '✗'  : '✓✓'}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  }
+
+  // ─── JSX ──────────────────────────────────────────────────────────────────
+
+  return (
+    <View style={[
+      styles.container,
+      profile?.contact_wallpaper_path
+        ? { backgroundImage: undefined }  // tratado via ImageBackground se necessário
+        : null
+    ]}>
+
+      {/* Cabeçalho com foto e nome do contato */}
+      <View style={styles.header}>
+        {profile?.contact_avatar_path
+          ? <Image source={{ uri: profile.contact_avatar_path }} style={styles.avatar} />
+          : <View style={styles.avatarPlaceholder}><Text style={styles.avatarInitial}>?</Text></View>
+        }
+        <View>
+          <Text style={styles.contactName}>{profile?.contact_name ?? targetPhone}</Text>
+          <Text style={styles.contactPhone}>{targetPhone}</Text>
+        </View>
+      </View>
+
+      {/* Área de localização */}
       <View style={styles.mapArea}>
         <Text style={styles.mapTitle}>📍 Localizações</Text>
         {myLocation && (
@@ -87,36 +198,29 @@ export default function HomeScreen({ targetPhone }) {
         )}
         {theirLocation && (
           <Text style={styles.locText}>
-            Ela: {theirLocation.lat.toFixed(4)}, {theirLocation.lng.toFixed(4)}
+            {profile?.contact_name ?? 'Contato'}: {theirLocation.lat.toFixed(4)}, {theirLocation.lng.toFixed(4)}
           </Text>
         )}
         <View style={styles.locationButtons}>
           <TouchableOpacity style={styles.btnSecondary} onPress={toggleTracking}>
             <Text style={styles.btnText}>
-              {isTracking ? '⏹ Parar GPS' : '▶ Iniciar GPS (15s)'}
+              {isTracking ? '⏹ Parar GPS' : '▶ GPS (15s)'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btnSecondary}
-            onPress={() => sendLocationOnce(targetPhone)}>
-            <Text style={styles.btnText}>📍 Enviar local agora</Text>
+          <TouchableOpacity style={styles.btnSecondary} onPress={() => sendLocationOnce(targetPhone)}>
+            <Text style={styles.btnText}>📍 Enviar agora</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Histórico de mensagens */}
+      {/* Histórico de mensagens carregado do banco */}
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={item => item.id}
         style={styles.chat}
-        renderItem={({ item }) => (
-          <View style={[styles.bubble, item.from === 'me' ? styles.bubbleMe : styles.bubbleThem]}>
-            <Text style={styles.bubbleText}>
-              {item.type === 'voice' ? '🎙 Mensagem de voz' : item.text}
-            </Text>
-          </View>
-        )}
+        renderItem={renderMessage}
+        onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
       />
 
       {/* Input de texto */}
@@ -127,42 +231,57 @@ export default function HomeScreen({ targetPhone }) {
           onChangeText={setInputText}
           placeholder="Digite uma mensagem..."
           placeholderTextColor="#888"
+          multiline
         />
         <TouchableOpacity style={styles.btnSend} onPress={sendText}>
           <Text style={styles.btnText}>➤</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Botão PTT grande */}
+      {/* Botão PTT */}
       <TouchableOpacity
         style={[styles.pttButton, isPressing && styles.pttActive]}
         onPressIn={() => { setIsPressing(true); AudioRecorder.start(); }}
         onPressOut={onPttRelease}
         activeOpacity={0.8}>
-        <Text style={styles.pttText}>{isPressing ? '🔴 Falando...' : '🎙 Segure pra falar'}</Text>
+        <Text style={styles.pttText}>
+          {isPressing ? '🔴 Falando...' : '🎙 Segure pra falar'}
+        </Text>
       </TouchableOpacity>
 
     </View>
   );
 }
 
+// ─── Estilos ──────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f0f1a' },
-  mapArea: { padding: 12, backgroundColor: '#1a1a2e', borderBottomWidth: 1, borderColor: '#333' },
-  mapTitle: { color: '#e94560', fontWeight: 'bold', marginBottom: 4 },
-  locText: { color: '#ccc', fontSize: 12 },
-  locationButtons: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  chat: { flex: 1, padding: 12 },
-  bubble: { maxWidth: '80%', padding: 10, borderRadius: 12, marginBottom: 8 },
-  bubbleMe: { backgroundColor: '#e94560', alignSelf: 'flex-end' },
-  bubbleThem: { backgroundColor: '#2a2a3e', alignSelf: 'flex-start' },
-  bubbleText: { color: '#fff' },
-  inputRow: { flexDirection: 'row', padding: 8, gap: 8 },
-  input: { flex: 1, backgroundColor: '#1a1a2e', color: '#fff', borderRadius: 20, paddingHorizontal: 16 },
-  btnSend: { backgroundColor: '#e94560', borderRadius: 20, padding: 12, justifyContent: 'center' },
-  btnSecondary: { backgroundColor: '#2a2a3e', borderRadius: 8, padding: 8 },
-  btnText: { color: '#fff', fontSize: 12 },
-  pttButton: { margin: 16, backgroundColor: '#e94560', borderRadius: 40, padding: 24, alignItems: 'center' },
-  pttActive: { backgroundColor: '#c0392b', transform: [{ scale: 0.96 }] },
-  pttText: { color: '#fff', fontWeight: 'bold', fontSize: 18 }
+  container:         { flex: 1, backgroundColor: '#0f0f1a' },
+  header:            { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#1a1a2e', gap: 12 },
+  avatar:            { width: 40, height: 40, borderRadius: 20 },
+  avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#e94560', alignItems: 'center', justifyContent: 'center' },
+  avatarInitial:     { color: '#fff', fontWeight: 'bold' },
+  contactName:       { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  contactPhone:      { color: '#888', fontSize: 12 },
+  mapArea:           { padding: 12, backgroundColor: '#1a1a2e', borderBottomWidth: 1, borderColor: '#333' },
+  mapTitle:          { color: '#e94560', fontWeight: 'bold', marginBottom: 4 },
+  locText:           { color: '#ccc', fontSize: 12 },
+  locationButtons:   { flexDirection: 'row', gap: 8, marginTop: 8 },
+  chat:              { flex: 1, padding: 12 },
+  bubble:            { maxWidth: '80%', padding: 10, borderRadius: 12, marginBottom: 8 },
+  bubbleMe:          { backgroundColor: '#e94560', alignSelf: 'flex-end' },
+  bubbleThem:        { backgroundColor: '#2a2a3e', alignSelf: 'flex-start' },
+  bubbleText:        { color: '#fff' },
+  bubbleImage:       { width: 120, height: 120, borderRadius: 8 },
+  bubbleMeta:        { flexDirection: 'row', justifyContent: 'flex-end', gap: 4, marginTop: 4 },
+  bubbleTime:        { color: 'rgba(255,255,255,0.6)', fontSize: 10 },
+  bubbleStatus:      { color: 'rgba(255,255,255,0.6)', fontSize: 10 },
+  inputRow:          { flexDirection: 'row', padding: 8, gap: 8 },
+  input:             { flex: 1, backgroundColor: '#1a1a2e', color: '#fff', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
+  btnSend:           { backgroundColor: '#e94560', borderRadius: 20, padding: 12, justifyContent: 'center' },
+  btnSecondary:      { backgroundColor: '#2a2a3e', borderRadius: 8, padding: 8 },
+  btnText:           { color: '#fff', fontSize: 12 },
+  pttButton:         { margin: 16, backgroundColor: '#e94560', borderRadius: 40, padding: 24, alignItems: 'center' },
+  pttActive:         { backgroundColor: '#c0392b', transform: [{ scale: 0.96 }] },
+  pttText:           { color: '#fff', fontWeight: 'bold', fontSize: 18 },
 });
