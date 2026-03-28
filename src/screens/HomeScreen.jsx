@@ -10,7 +10,7 @@ import { getAllMessages, getProfile, saveMessage } from '../services/Database';
 
 const { SmsSender } = NativeModules;
 
-export default function HomeScreen({ targetPhone }) {
+export default function HomeScreen({ targetPhone, onOpenProfile }) {
   const [messages,      setMessages]      = useState([]);
   const [inputText,     setInputText]     = useState('');
   const [theirLocation, setTheirLocation] = useState(null);
