@@ -23,15 +23,37 @@ workflows:
           rm -rf android/app/src/main/cpp/codec2
           git clone https://github.com/drowe67/codec2.git \
             android/app/src/main/cpp/codec2
-          echo "--- commit clonado ---"
-          git -C android/app/src/main/cpp/codec2 log -1 --oneline
 
-      - name: Listar codebooks disponíveis
+      - name: Gerar codebooks do Codec2
         script: |
-          echo "--- arquivos .txt no repositório ---"
-          find android/app/src/main/cpp/codec2 -name "*.txt" | sort
-          echo "--- estrutura de pastas ---"
-          ls android/app/src/main/cpp/codec2/
+          CODEC2_DIR=android/app/src/main/cpp/codec2
+          BUILD_DIR=$CODEC2_DIR/build_host
+
+          mkdir -p $BUILD_DIR
+          cd $BUILD_DIR
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          make generate_codebook
+          cd -
+
+          GEN=$BUILD_DIR/src/generate_codebook
+          CB=$CODEC2_DIR/src/codebook
+          OUT=$BUILD_DIR/src
+
+          $GEN lsp_cb        $CB/lsp1.txt $CB/lsp2.txt $CB/lsp3.txt $CB/lsp4.txt \
+                             $CB/lsp5.txt $CB/lsp6.txt $CB/lsp7.txt $CB/lsp8.txt \
+                             $CB/lsp9.txt $CB/lsp10.txt > $OUT/codebook.c
+
+          $GEN lsp_cbd       $CB/dlsp1.txt $CB/dlsp2.txt $CB/dlsp3.txt $CB/dlsp4.txt \
+                             $CB/dlsp5.txt $CB/dlsp6.txt $CB/dlsp7.txt $CB/dlsp8.txt \
+                             $CB/dlsp9.txt $CB/dlsp10.txt > $OUT/codebookd.c
+
+          $GEN lsp_cbjmv     $CB/lspjmv1.txt $CB/lspjmv2.txt $CB/lspjmv3.txt > $OUT/codebookjmv.c
+
+          $GEN ge_cb         $CB/gecb.txt > $OUT/codebookge.c
+
+          $GEN newamp1vq_cb  $CB/train_120_1.txt $CB/train_120_2.txt > $OUT/codebooknewamp1.c
+
+          $GEN newamp1_energy_cb $CB/newamp1_energy_q.txt > $OUT/codebooknewamp1_energy.c
 
       - name: Instalar dependências Node
         script: |
