@@ -24,6 +24,27 @@ workflows:
           git clone https://github.com/drowe67/codec2.git \
             android/app/src/main/cpp/codec2
 
+      - name: Gerar codebooks do Codec2
+        script: |
+          cd android/app/src/main/cpp/codec2
+          mkdir -p build_host
+          cd build_host
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          make generate_codebook
+          cd ../src
+          ../build_host/src/generate_codebook codebook \
+            ../build_host/src/codebook.c \
+            $(ls ../codebook/*.txt | grep -v newamp | grep -v energy | grep -v 'd\.txt$')
+          ../build_host/src/generate_codebook codebookd \
+            ../build_host/src/codebookd.c \
+            $(ls ../codebook/*d.txt 2>/dev/null | head -1 || echo "")
+          ../build_host/src/generate_codebook codebooknewamp1 \
+            ../build_host/src/codebooknewamp1.c \
+            $(ls ../codebook/newamp1vq*.txt)
+          ../build_host/src/generate_codebook codebooknewamp1_energy \
+            ../build_host/src/codebooknewamp1_energy.c \
+            $(ls ../codebook/newamp1energy*.txt)
+
       - name: Instalar dependências Node
         script: |
           npm install
