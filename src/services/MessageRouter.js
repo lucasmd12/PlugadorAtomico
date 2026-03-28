@@ -100,3 +100,27 @@ async function handleChunked(raw, type, onComplete) {
 export async function markAsRead(messageId) {
   await markMessageRead(messageId);
 }
+
+// Escuta confirmações de envio do SmsSender e persiste no banco
+export function initSentListener() {
+  const emitter = new NativeEventEmitter(NativeModules.SmsSender);
+
+  const subscription = emitter.addListener('SMS_SENT', async (event) => {
+    const id = generateId();
+    await saveMessage({
+      id,
+      type:      event.type,
+      direction: 'sent',
+      payload:   event.payload ?? null,
+      lat:       event.lat    ?? null,
+      lng:       event.lng    ?? null,
+      status:    event.status,           // 'sent' ou 'error'
+    });
+
+    if (event.type === 'GPS' && event.status === 'sent') {
+      await saveLocation({ direction: 'sent', lat: event.lat, lng: event.lng });
+    }
+  });
+
+  return () => subscription.remove();
+}
