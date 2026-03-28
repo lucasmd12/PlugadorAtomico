@@ -38,6 +38,8 @@ set(CODEC2_SOURCES
     codec2/src/phi0.c
     codec2/build_host/src/codebook.c
     codec2/build_host/src/codebookd.c
+    codec2/build_host/src/codebookjmv.c
+    codec2/build_host/src/codebookge.c
     codec2/build_host/src/codebooknewamp1.c
     codec2/build_host/src/codebooknewamp1_energy.c
 )
