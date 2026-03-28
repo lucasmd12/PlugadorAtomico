@@ -12,9 +12,6 @@ file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/codec2/src/codec2/version.h"
 #endif\n"
 )
 
-# Apenas o core necessário para CODEC2_MODE_1200
-# Todos os módulos OFDM, FreeDV, FSK, COHPSK e FDMDV foram removidos
-# pois dependem de filtros e codebooks gerados que não existem no clone direto
 set(CODEC2_SOURCES
     codec2/src/codec2.c
     codec2/src/sine.c
@@ -38,6 +35,11 @@ set(CODEC2_SOURCES
     codec2/src/modem_stats.c
     codec2/src/mpdecode_core.c
     codec2/src/linreg.c
+    codec2/src/phi0.c
+    codec2/build_host/src/codebook.c
+    codec2/build_host/src/codebookd.c
+    codec2/build_host/src/codebooknewamp1.c
+    codec2/build_host/src/codebooknewamp1_energy.c
 )
 
 add_library(
