@@ -177,16 +177,20 @@ export default function HomeScreen({ targetPhone }) {
     ]}>
 
       {/* Cabeçalho com foto e nome do contato */}
-      <View style={styles.header}>
-        {profile?.contact_avatar_path
-          ? <Image source={{ uri: profile.contact_avatar_path }} style={styles.avatar} />
-          : <View style={styles.avatarPlaceholder}><Text style={styles.avatarInitial}>?</Text></View>
-        }
-        <View>
-          <Text style={styles.contactName}>{profile?.contact_name ?? targetPhone}</Text>
-          <Text style={styles.contactPhone}>{targetPhone}</Text>
-        </View>
-      </View>
+<View style={styles.header}>
+  {profile?.contact_avatar_path
+    ? <Image source={{ uri: profile.contact_avatar_path }} style={styles.avatar} />
+    : <View style={styles.avatarPlaceholder}><Text style={styles.avatarInitial}>?</Text></View>
+  }
+  <View>
+    <Text style={styles.contactName}>{profile?.contact_name ?? targetPhone}</Text>
+    <Text style={styles.contactPhone}>{targetPhone}</Text>
+  </View>
+
+  <TouchableOpacity onPress={onOpenProfile} style={{ marginLeft: 'auto' }}>
+    <Text style={{ color: '#e94560', fontSize: 22 }}>⚙️</Text>
+  </TouchableOpacity>
+</View>
 
       {/* Área de localização */}
       <View style={styles.mapArea}>
