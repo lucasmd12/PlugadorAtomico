@@ -26,24 +26,36 @@ workflows:
 
       - name: Gerar codebooks do Codec2
         script: |
-          cd android/app/src/main/cpp/codec2
-          mkdir -p build_host
-          cd build_host
+          CODEC2_DIR=android/app/src/main/cpp/codec2
+          BUILD_DIR=$CODEC2_DIR/build_host
+
+          # Compila o gerador de codebooks para o host (macOS)
+          mkdir -p $BUILD_DIR
+          cd $BUILD_DIR
           cmake .. -DCMAKE_BUILD_TYPE=Release
           make generate_codebook
-          cd ../src
-          ../build_host/src/generate_codebook codebook \
-            ../build_host/src/codebook.c \
-            $(ls ../codebook/*.txt | grep -v newamp | grep -v energy | grep -v 'd\.txt$')
-          ../build_host/src/generate_codebook codebookd \
-            ../build_host/src/codebookd.c \
-            $(ls ../codebook/*d.txt 2>/dev/null | head -1 || echo "")
-          ../build_host/src/generate_codebook codebooknewamp1 \
-            ../build_host/src/codebooknewamp1.c \
-            $(ls ../codebook/newamp1vq*.txt)
-          ../build_host/src/generate_codebook codebooknewamp1_energy \
-            ../build_host/src/codebooknewamp1_energy.c \
-            $(ls ../codebook/newamp1energy*.txt)
+          cd -
+
+          GEN=$BUILD_DIR/src/generate_codebook
+          CB=$CODEC2_DIR/codebook
+          OUT=$BUILD_DIR/src
+
+          # Gera cada codebook usando redirecionamento de saída (sintaxe correta do generate_codebook)
+          $GEN lsp_cb        $CB/lsp1.txt $CB/lsp2.txt $CB/lsp3.txt $CB/lsp4.txt \
+                             $CB/lsp5.txt $CB/lsp6.txt $CB/lsp7.txt $CB/lsp8.txt \
+                             $CB/lsp9.txt $CB/lsp10.txt > $OUT/codebook.c
+
+          $GEN lsp_cbd       $CB/dlsp1.txt $CB/dlsp2.txt $CB/dlsp3.txt $CB/dlsp4.txt \
+                             $CB/dlsp5.txt $CB/dlsp6.txt $CB/dlsp7.txt $CB/dlsp8.txt \
+                             $CB/dlsp9.txt $CB/dlsp10.txt > $OUT/codebookd.c
+
+          $GEN lsp_cbjmv     $CB/lspjmv1.txt $CB/lspjmv2.txt $CB/lspjmv3.txt > $OUT/codebookjmv.c
+
+          $GEN ge_cb         $CB/gecb.txt > $OUT/codebookge.c
+
+          $GEN newamp1vq_cb  $CB/train_120_1.txt $CB/train_120_2.txt > $OUT/codebooknewamp1.c
+
+          $GEN newamp1_energy_cb $CB/newamp1_energy_q.txt > $OUT/codebooknewamp1_energy.c
 
       - name: Instalar dependências Node
         script: |
