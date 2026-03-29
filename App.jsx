@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SetupScreen   from './src/screens/SetupScreen';
 import HomeScreen    from './src/screens/HomeScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
-import { initDatabase } from './src/services/Database';
+import { initDatabase, getSavedContactPhone, saveContactPhone } from './src/services/Database';
 
 export default function App() {
   const [ready,       setReady]       = useState(false);
@@ -11,17 +11,31 @@ export default function App() {
 
   useEffect(() => {
     initDatabase()
-      .then(() => setReady(true))
-      .catch(e => {
-        console.error('Erro ao iniciar banco:', e);
-        setReady(true); // mostra o app mesmo se o banco falhar
-      });
+      .then(() => getSavedContactPhone())
+      .then(phone => {
+        if (phone) setTargetPhone(phone);
+        setReady(true);
+      })
+      .catch(() => setReady(true));
   }, []);
 
-  if (!ready) return null; // tela preta enquanto inicializa — rápido
+  async function handleSetupComplete(phone) {
+    await saveContactPhone(phone);
+    setTargetPhone(phone);
+  }
 
-  if (!targetPhone) return <SetupScreen onSetupComplete={setTargetPhone} />;
-  if (screen === 'profile') return <ProfileScreen onBack={() => setScreen('home')} />;
+  if (!ready) return null;
 
-  return <HomeScreen targetPhone={targetPhone} onOpenProfile={() => setScreen('profile')} />;
+  if (!targetPhone) {
+    return <SetupScreen onSetupComplete={handleSetupComplete} />;
+  }
+  if (screen === 'profile') {
+    return <ProfileScreen onBack={() => setScreen('home')} />;
+  }
+  return (
+    <HomeScreen
+      targetPhone={targetPhone}
+      onOpenProfile={() => setScreen('profile')}
+    />
+  );
 }
