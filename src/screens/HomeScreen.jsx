@@ -6,29 +6,29 @@ import {
 import { initMessageRouter, initSentListener, markAsRead } from '../services/MessageRouter';
 import { startTracking, stopTracking, sendLocationOnce } from '../services/LocationTracker';
 import AudioRecorder from '../services/AudioRecorder';
-import { getAllMessages, getProfile, saveMessage } from '../services/Database';
+import { getAllMessages, getProfile, getSavedSubscriptionId } from '../services/Database';
 
-const { SmsSender } = NativeModules;
+const { SmsSender, OverlayModule } = NativeModules;
 
 export default function HomeScreen({ targetPhone, onOpenProfile }) {
-  const [messages,      setMessages]      = useState([]);
-  const [inputText,     setInputText]     = useState('');
-  const [theirLocation, setTheirLocation] = useState(null);
-  const [myLocation,    setMyLocation]    = useState(null);
-  const [isTracking,    setIsTracking]    = useState(false);
-  const [isPressing,    setIsPressing]    = useState(false);
-  const [profile,       setProfile]       = useState(null);
+  const [messages,       setMessages]       = useState([]);
+  const [inputText,      setInputText]      = useState('');
+  const [theirLocation,  setTheirLocation]  = useState(null);
+  const [myLocation,     setMyLocation]     = useState(null);
+  const [isTracking,     setIsTracking]     = useState(false);
+  const [isPressing,     setIsPressing]     = useState(false);
+  const [profile,        setProfile]        = useState(null);
+  const [subscriptionId, setSubscriptionId] = useState(-1);
+  const [overlayActive,  setOverlayActive]  = useState(false);
   const flatListRef = useRef();
-
-  // ─── Inicialização ────────────────────────────────────────────────────────
 
   useEffect(() => {
     loadHistory();
     loadProfile();
+    loadSubscriptionId();
 
-    // Escuta mensagens recebidas em tempo real
     const cleanupRouter = initMessageRouter({
-      onText:  ({ id, text })        => addMessage({ id, type: 'MSG', payload: text,      direction: 'received', status: 'received' }),
+      onText:  ({ id, text })        => addMessage({ id, type: 'MSG', payload: text, direction: 'received', status: 'received' }),
       onVoice: ({ id, audioBase64 }) => handleIncomingVoice(id, audioBase64),
       onGps:   ({ id, lat, lng })    => {
         setTheirLocation({ lat, lng });
@@ -36,7 +36,6 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
       },
     });
 
-    // Escuta confirmações de envio para atualizar o banco
     const cleanupSent = initSentListener();
 
     return () => {
@@ -56,21 +55,18 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
     setProfile(p);
   }
 
-  // Converte linha do banco para o formato usado pelo FlatList
-  function normalizeRow(row) {
-    return {
-      id:        row.id,
-      type:      row.type,
-      direction: row.direction,
-      payload:   row.payload,
-      lat:       row.lat,
-      lng:       row.lng,
-      status:    row.status,
-      createdAt: row.created_at,
-    };
+  async function loadSubscriptionId() {
+    const id = await getSavedSubscriptionId();
+    setSubscriptionId(id);
   }
 
-  // ─── Mensagens ────────────────────────────────────────────────────────────
+  function normalizeRow(row) {
+    return {
+      id: row.id, type: row.type, direction: row.direction,
+      payload: row.payload, lat: row.lat, lng: row.lng,
+      status: row.status, createdAt: row.created_at,
+    };
+  }
 
   function addMessage(msg) {
     setMessages(prev => [...prev, { ...msg, createdAt: Date.now() }]);
@@ -85,9 +81,7 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
 
   async function sendText() {
     if (!inputText.trim()) return;
-    await SmsSender.sendText(targetPhone, inputText);
-    // A persistência ocorre via evento SMS_SENT no initSentListener,
-    // mas adicionamos ao estado local imediatamente para feedback visual
+    await SmsSender.sendText(targetPhone, inputText, subscriptionId);
     addMessage({ id: `local-${Date.now()}`, type: 'MSG', payload: inputText, direction: 'sent', status: 'sent' });
     setInputText('');
   }
@@ -96,18 +90,15 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
     setIsPressing(false);
     const audioBase64 = await AudioRecorder.stopAndEncode();
     if (!audioBase64) return;
-    await SmsSender.sendVoice(targetPhone, audioBase64);
+    await SmsSender.sendVoice(targetPhone, audioBase64, subscriptionId);
     addMessage({ id: `local-${Date.now()}`, type: 'VOZ', direction: 'sent', status: 'sent' });
   }
 
-  // Marca todas as mensagens recebidas como lidas ao abrir o chat
   useEffect(() => {
     messages
       .filter(m => m.direction === 'received' && m.status === 'received')
       .forEach(m => markAsRead(m.id));
   }, [messages]);
-
-  // ─── GPS ──────────────────────────────────────────────────────────────────
 
   function toggleTracking() {
     if (isTracking) {
@@ -119,22 +110,26 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
     }
   }
 
-  // ─── Renderização das bolhas ───────────────────────────────────────────────
+  function toggleOverlay() {
+    if (overlayActive) {
+      OverlayModule?.stopOverlay();
+      setOverlayActive(false);
+    } else {
+      OverlayModule?.startOverlay();
+      setOverlayActive(true);
+    }
+  }
 
   function renderMessage({ item }) {
     const isMe = item.direction === 'sent';
-
     let content = null;
+
     if (item.type === 'MSG') {
       content = <Text style={styles.bubbleText}>{item.payload}</Text>;
     } else if (item.type === 'VOZ') {
       content = <Text style={styles.bubbleText}>🎙 Mensagem de voz</Text>;
     } else if (item.type === 'GPS') {
-      content = (
-        <Text style={styles.bubbleText}>
-          📍 {item.lat?.toFixed(4)}, {item.lng?.toFixed(4)}
-        </Text>
-      );
+      content = <Text style={styles.bubbleText}>📍 {item.lat?.toFixed(4)}, {item.lng?.toFixed(4)}</Text>;
     } else if (item.type === 'IMG') {
       content = item.payload
         ? <Image source={{ uri: `data:image/jpeg;base64,${item.payload}` }} style={styles.bubbleImage} />
@@ -145,14 +140,10 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
       <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
         {content}
         <View style={styles.bubbleMeta}>
-          <Text style={styles.bubbleTime}>
-            {formatTime(item.createdAt)}
-          </Text>
+          <Text style={styles.bubbleTime}>{formatTime(item.createdAt)}</Text>
           {isMe && (
             <Text style={styles.bubbleStatus}>
-              {item.status === 'sending' ? '⏳' :
-               item.status === 'sent'    ? '✓'  :
-               item.status === 'error'   ? '✗'  : '✓✓'}
+              {item.status === 'sending' ? '⏳' : item.status === 'sent' ? '✓' : item.status === 'error' ? '✗' : '✓✓'}
             </Text>
           )}
         </View>
@@ -166,50 +157,35 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
     return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
   }
 
-  // ─── JSX ──────────────────────────────────────────────────────────────────
-
   return (
-    <View style={[
-      styles.container,
-      profile?.contact_wallpaper_path
-        ? { backgroundImage: undefined }  // tratado via ImageBackground se necessário
-        : null
-    ]}>
+    <View style={styles.container}>
 
-      {/* Cabeçalho com foto e nome do contato */}
-<View style={styles.header}>
-  {profile?.contact_avatar_path
-    ? <Image source={{ uri: profile.contact_avatar_path }} style={styles.avatar} />
-    : <View style={styles.avatarPlaceholder}><Text style={styles.avatarInitial}>?</Text></View>
-  }
-  <View>
-    <Text style={styles.contactName}>{profile?.contact_name ?? targetPhone}</Text>
-    <Text style={styles.contactPhone}>{targetPhone}</Text>
-  </View>
+      {/* Cabeçalho */}
+      <View style={styles.header}>
+        {profile?.contact_avatar_path
+          ? <Image source={{ uri: profile.contact_avatar_path }} style={styles.avatar} />
+          : <View style={styles.avatarPlaceholder}><Text style={styles.avatarInitial}>?</Text></View>
+        }
+        <View style={{ flex: 1 }}>
+          <Text style={styles.contactName}>{profile?.contact_name ?? targetPhone}</Text>
+          <Text style={styles.contactPhone}>{targetPhone}</Text>
+        </View>
+        <TouchableOpacity onPress={toggleOverlay} style={styles.headerBtn}>
+          <Text style={{ fontSize: 20 }}>{overlayActive ? '🟢' : '⚫'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onOpenProfile} style={styles.headerBtn}>
+          <Text style={{ color: '#e94560', fontSize: 20 }}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
 
-  <TouchableOpacity onPress={onOpenProfile} style={{ marginLeft: 'auto' }}>
-    <Text style={{ color: '#e94560', fontSize: 22 }}>⚙️</Text>
-  </TouchableOpacity>
-</View>
-
-      {/* Área de localização */}
+      {/* GPS */}
       <View style={styles.mapArea}>
         <Text style={styles.mapTitle}>📍 Localizações</Text>
-        {myLocation && (
-          <Text style={styles.locText}>
-            Você: {myLocation.lat.toFixed(4)}, {myLocation.lng.toFixed(4)}
-          </Text>
-        )}
-        {theirLocation && (
-          <Text style={styles.locText}>
-            {profile?.contact_name ?? 'Contato'}: {theirLocation.lat.toFixed(4)}, {theirLocation.lng.toFixed(4)}
-          </Text>
-        )}
+        {myLocation && <Text style={styles.locText}>Você: {myLocation.lat.toFixed(4)}, {myLocation.lng.toFixed(4)}</Text>}
+        {theirLocation && <Text style={styles.locText}>{profile?.contact_name ?? 'Contato'}: {theirLocation.lat.toFixed(4)}, {theirLocation.lng.toFixed(4)}</Text>}
         <View style={styles.locationButtons}>
           <TouchableOpacity style={styles.btnSecondary} onPress={toggleTracking}>
-            <Text style={styles.btnText}>
-              {isTracking ? '⏹ Parar GPS' : '▶ GPS (15s)'}
-            </Text>
+            <Text style={styles.btnText}>{isTracking ? '⏹ Parar GPS' : '▶ GPS (15s)'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.btnSecondary} onPress={() => sendLocationOnce(targetPhone)}>
             <Text style={styles.btnText}>📍 Enviar agora</Text>
@@ -217,7 +193,7 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
         </View>
       </View>
 
-      {/* Histórico de mensagens carregado do banco */}
+      {/* Chat */}
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -227,7 +203,7 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
         onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
       />
 
-      {/* Input de texto */}
+      {/* Input */}
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
@@ -242,31 +218,28 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
         </TouchableOpacity>
       </View>
 
-      {/* Botão PTT */}
+      {/* PTT */}
       <TouchableOpacity
         style={[styles.pttButton, isPressing && styles.pttActive]}
         onPressIn={() => { setIsPressing(true); AudioRecorder.start(); }}
         onPressOut={onPttRelease}
         activeOpacity={0.8}>
-        <Text style={styles.pttText}>
-          {isPressing ? '🔴 Falando...' : '🎙 Segure pra falar'}
-        </Text>
+        <Text style={styles.pttText}>{isPressing ? '🔴 Falando...' : '🎙 Segure pra falar'}</Text>
       </TouchableOpacity>
 
     </View>
   );
 }
 
-// ─── Estilos ──────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   container:         { flex: 1, backgroundColor: '#0f0f1a' },
-  header:            { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#1a1a2e', gap: 12 },
+  header:            { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#1a1a2e', gap: 8 },
   avatar:            { width: 40, height: 40, borderRadius: 20 },
   avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#e94560', alignItems: 'center', justifyContent: 'center' },
   avatarInitial:     { color: '#fff', fontWeight: 'bold' },
   contactName:       { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   contactPhone:      { color: '#888', fontSize: 12 },
+  headerBtn:         { padding: 4 },
   mapArea:           { padding: 12, backgroundColor: '#1a1a2e', borderBottomWidth: 1, borderColor: '#333' },
   mapTitle:          { color: '#e94560', fontWeight: 'bold', marginBottom: 4 },
   locText:           { color: '#ccc', fontSize: 12 },
