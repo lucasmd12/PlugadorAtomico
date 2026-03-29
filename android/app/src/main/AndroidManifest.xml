@@ -3,6 +3,7 @@
     <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
@@ -35,7 +36,6 @@
             android:exported="false"
             android:foregroundServiceType="location"/>
 
-        <!-- SEM android:permission aqui — era isso que bloqueava o recebimento -->
         <receiver
             android:name=".sms.SmsReceiver"
             android:exported="true">
