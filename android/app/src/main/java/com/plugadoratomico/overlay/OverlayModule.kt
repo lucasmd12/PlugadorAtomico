@@ -21,11 +21,14 @@ class OverlayModule(private val reactContext: ReactApplicationContext)
     }
 
     @ReactMethod
-    fun startOverlay() {
+    fun startOverlay(targetPhone: String) {
+        val intent = Intent(reactContext, OverlayService::class.java).apply {
+            putExtra("targetPhone", targetPhone)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            reactContext.startForegroundService(Intent(reactContext, OverlayService::class.java))
+            reactContext.startForegroundService(intent)
         } else {
-            reactContext.startService(Intent(reactContext, OverlayService::class.java))
+            reactContext.startService(intent)
         }
     }
 
