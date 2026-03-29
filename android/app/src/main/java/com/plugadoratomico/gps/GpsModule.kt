@@ -12,8 +12,10 @@ class GpsModule(private val reactContext: ReactApplicationContext)
     @ReactMethod
     fun startService(options: ReadableMap) {
         val intent = Intent(reactContext, GpsService::class.java).apply {
-            putExtra("targetPhone", options.getString("targetPhone"))
-            putExtra("intervalMs", options.getDouble("intervalMs").toLong())
+            putExtra("targetPhone",    options.getString("targetPhone"))
+            putExtra("intervalMs",     options.getDouble("intervalMs").toLong())
+            putExtra("subscriptionId", if (options.hasKey("subscriptionId"))
+                options.getInt("subscriptionId") else -1)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             reactContext.startForegroundService(intent)
