@@ -2,7 +2,6 @@ import SQLite from 'react-native-sqlite-storage';
 import RNFS from 'react-native-fs';
 
 SQLite.enablePromise(true);
-
 let db = null;
 
 export async function initDatabase() {
@@ -14,16 +13,22 @@ export async function initDatabase() {
 async function createTables() {
   await db.executeSql(`
     CREATE TABLE IF NOT EXISTS profile (
-      id                    INTEGER PRIMARY KEY,
-      my_name               TEXT    DEFAULT 'Eu',
-      my_avatar_path        TEXT,
-      my_wallpaper_path     TEXT,
-      contact_phone         TEXT,
-      contact_name          TEXT    DEFAULT 'Contato',
-      contact_avatar_path   TEXT,
-      contact_wallpaper_path TEXT
+      id                     INTEGER PRIMARY KEY,
+      my_name                TEXT    DEFAULT 'Eu',
+      my_avatar_path         TEXT,
+      my_wallpaper_path      TEXT,
+      contact_phone          TEXT,
+      contact_name           TEXT    DEFAULT 'Contato',
+      contact_avatar_path    TEXT,
+      contact_wallpaper_path TEXT,
+      subscription_id        INTEGER DEFAULT -1
     );
   `);
+
+  // Adiciona coluna se banco já existia sem ela
+  try {
+    await db.executeSql(`ALTER TABLE profile ADD COLUMN subscription_id INTEGER DEFAULT -1`);
+  } catch (e) { /* já existe, ignora */ }
 
   await db.executeSql(`
     CREATE TABLE IF NOT EXISTS messages (
@@ -63,8 +68,6 @@ async function createTables() {
   await db.executeSql(`INSERT OR IGNORE INTO profile (id) VALUES (1);`);
 }
 
-// ─── PERFIL ───────────────────────────────────────────────────────────────────
-
 export async function getProfile() {
   const [result] = await db.executeSql(`SELECT * FROM profile WHERE id = 1`);
   return result.rows.item(0);
@@ -77,37 +80,35 @@ export async function updateProfile(fields) {
   await db.executeSql(`UPDATE profile SET ${setClause} WHERE id = 1`, values);
 }
 
-// Salva o número configurado — persiste entre sessões
 export async function saveContactPhone(phone) {
   await updateProfile({ contact_phone: phone });
 }
 
-// Recupera o número salvo — usado no App.jsx ao iniciar
 export async function getSavedContactPhone() {
-  const profile = await getProfile();
-  return profile?.contact_phone ?? null;
+  const p = await getProfile();
+  return p?.contact_phone ?? null;
+}
+
+export async function saveSubscriptionId(id) {
+  await updateProfile({ subscription_id: id });
+}
+
+export async function getSavedSubscriptionId() {
+  const p = await getProfile();
+  return p?.subscription_id ?? -1;
 }
 
 export async function saveProfileImage(field, sourceUri) {
   const filename = `${field}_${Date.now()}.jpg`;
   const destPath = `${RNFS.DocumentDirectoryPath}/${filename}`;
-
-  // Trata URI content:// do Xiaomi e outros Android modernos
-  const cleanUri = sourceUri.startsWith('content://')
-    ? sourceUri
-    : sourceUri.replace('file://', '');
-
-  await RNFS.copyFile(cleanUri, destPath);
+  await RNFS.copyFile(sourceUri, destPath);
   await updateProfile({ [field]: destPath });
   return destPath;
 }
 
-// ─── MENSAGENS ────────────────────────────────────────────────────────────────
-
 export async function saveMessage({ id, type, direction, payload, lat, lng, status }) {
   await db.executeSql(
-    `INSERT OR REPLACE INTO messages
-       (id, type, direction, payload, lat, lng, status, created_at)
+    `INSERT OR REPLACE INTO messages (id, type, direction, payload, lat, lng, status, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, type, direction, payload ?? null, lat ?? null, lng ?? null, status, Date.now()]
   );
@@ -125,13 +126,9 @@ export async function markMessageRead(id) {
 }
 
 export async function getAllMessages() {
-  const [result] = await db.executeSql(
-    `SELECT * FROM messages ORDER BY created_at ASC`
-  );
+  const [result] = await db.executeSql(`SELECT * FROM messages ORDER BY created_at ASC`);
   return rowsToArray(result);
 }
-
-// ─── CHUNKS ───────────────────────────────────────────────────────────────────
 
 export async function saveChunk({ messageId, seq, total, data }) {
   await db.executeSql(
@@ -153,24 +150,12 @@ export async function tryReassemble(messageId) {
   return reassembled;
 }
 
-// ─── LOCALIZAÇÃO ──────────────────────────────────────────────────────────────
-
 export async function saveLocation({ direction, lat, lng }) {
   await db.executeSql(
     `INSERT INTO locations (direction, lat, lng, created_at) VALUES (?, ?, ?, ?)`,
     [direction, lat, lng, Date.now()]
   );
 }
-
-export async function getLocationHistory(direction = 'received', limit = 500) {
-  const [result] = await db.executeSql(
-    `SELECT * FROM locations WHERE direction = ? ORDER BY created_at DESC LIMIT ?`,
-    [direction, limit]
-  );
-  return rowsToArray(result);
-}
-
-// ─── UTILITÁRIO ───────────────────────────────────────────────────────────────
 
 function rowsToArray(result) {
   const rows = [];
