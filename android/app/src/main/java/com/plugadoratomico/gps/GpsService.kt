@@ -5,6 +5,7 @@ import android.content.Intent
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.IBinder
 import android.telephony.SmsManager
 import androidx.core.app.NotificationCompat
@@ -19,20 +20,20 @@ class GpsService : Service(), LocationListener {
     }
 
     private lateinit var locationManager: LocationManager
-    private var targetPhone: String = ""
-    private var intervalMs: Long = 15000
+    private var targetPhone:    String = ""
+    private var intervalMs:     Long   = 15000
+    private var subscriptionId: Int    = -1
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        // startForeground deve ser chamado AQUI em onCreate, não em onStartCommand
         startForeground(2, buildNotification())
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        targetPhone = intent?.getStringExtra("targetPhone") ?: ""
-        intervalMs  = intent?.getLongExtra("intervalMs", 15000) ?: 15000
-
+        targetPhone    = intent?.getStringExtra("targetPhone")         ?: ""
+        intervalMs     = intent?.getLongExtra("intervalMs", 15000)     ?: 15000
+        subscriptionId = intent?.getIntExtra("subscriptionId", -1)    ?: -1
         val singleUpdate = intent?.getBooleanExtra("singleUpdate", false) ?: false
 
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
@@ -42,10 +43,7 @@ class GpsService : Service(), LocationListener {
                 locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null)
             } else {
                 locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    intervalMs,
-                    0f,
-                    this
+                    LocationManager.GPS_PROVIDER, intervalMs, 0f, this
                 )
             }
         } catch (e: SecurityException) {
@@ -61,9 +59,13 @@ class GpsService : Service(), LocationListener {
 
         if (targetPhone.isNotEmpty()) {
             try {
-                SmsManager.getDefault().sendTextMessage(
-                    targetPhone, null, "[GPS]$lat,$lng", null, null
-                )
+                val smsManager = if (subscriptionId >= 0 &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+                } else {
+                    SmsManager.getDefault()
+                }
+                smsManager.sendTextMessage(targetPhone, null, "[GPS]$lat,$lng", null, null)
             } catch (e: Exception) { }
         }
 
