@@ -933,3 +933,747 @@ Adicione também no `package.json`:
 ```
 
 São 5 arquivos modificados e 1 dependência nova. O overlay agora tem o botão PTT funcional com gravação — a integração com Codec2 no overlay virá depois que o PTT principal estiver estável. O dual SIM detecta automaticamente e pula a tela se houver só um chip. A agenda abre com busca em tempo real.
+
+
+Vou mandar todos em sequência.
+
+---
+
+**1. `package.json`**
+
+```json
+{
+  "name": "PlugadorAtomico",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "android": "react-native run-android",
+    "start": "react-native start"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-native": "0.73.0",
+    "react-native-audio-recorder-player": "^3.5.3",
+    "react-native-fs": "^2.20.0",
+    "react-native-sqlite-storage": "^6.0.1",
+    "react-native-image-picker": "^7.1.0",
+    "react-native-contacts": "^7.0.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@babel/preset-env": "^7.20.0",
+    "@babel/runtime": "^7.20.0",
+    "@react-native/babel-preset": "0.73.21",
+    "@react-native/metro-config": "0.73.5",
+    "@react-native/eslint-config": "0.73.2",
+    "babel-jest": "^29.2.1",
+    "jest": "^29.2.1",
+    "typescript": "5.0.4"
+  }
+}
+```
+
+---
+
+**2. `AndroidManifest.xml`**
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+
+    <application
+        android:name=".MainApplication"
+        android:label="Plugador Atômico"
+        android:allowBackup="false"
+        android:theme="@style/AppTheme">
+
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".overlay.OverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"/>
+
+        <service
+            android:name=".gps.GpsService"
+            android:exported="false"
+            android:foregroundServiceType="location"/>
+
+        <receiver
+            android:name=".sms.SmsReceiver"
+            android:exported="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+            </intent-filter>
+        </receiver>
+
+    </application>
+</manifest>
+```
+
+---
+
+**3. `android/.../gps/GpsService.kt`**
+
+```kotlin
+package com.plugadoratomico.gps
+
+import android.app.*
+import android.content.Intent
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
+import android.os.Build
+import android.os.IBinder
+import android.telephony.SmsManager
+import androidx.core.app.NotificationCompat
+import com.facebook.react.ReactApplication
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.modules.core.DeviceEventManagerModule
+
+class GpsService : Service(), LocationListener {
+
+    companion object {
+        const val CHANNEL_ID = "plugador_gps"
+    }
+
+    private lateinit var locationManager: LocationManager
+    private var targetPhone:    String = ""
+    private var intervalMs:     Long   = 15000
+    private var subscriptionId: Int    = -1
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+        startForeground(2, buildNotification())
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        targetPhone    = intent?.getStringExtra("targetPhone")         ?: ""
+        intervalMs     = intent?.getLongExtra("intervalMs", 15000)     ?: 15000
+        subscriptionId = intent?.getIntExtra("subscriptionId", -1)    ?: -1
+        val singleUpdate = intent?.getBooleanExtra("singleUpdate", false) ?: false
+
+        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+
+        try {
+            if (singleUpdate) {
+                locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null)
+            } else {
+                locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, intervalMs, 0f, this
+                )
+            }
+        } catch (e: SecurityException) {
+            stopSelf()
+        }
+
+        return START_STICKY
+    }
+
+    override fun onLocationChanged(location: Location) {
+        val lat = location.latitude
+        val lng = location.longitude
+
+        if (targetPhone.isNotEmpty()) {
+            try {
+                val smsManager = if (subscriptionId >= 0 &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+                } else {
+                    SmsManager.getDefault()
+                }
+                smsManager.sendTextMessage(targetPhone, null, "[GPS]$lat,$lng", null, null)
+            } catch (e: Exception) { }
+        }
+
+        val reactApp     = applicationContext as? ReactApplication ?: return
+        val reactContext = reactApp.reactNativeHost.reactInstanceManager.currentReactContext ?: return
+        val params = Arguments.createMap().apply {
+            putDouble("lat", lat)
+            putDouble("lng", lng)
+        }
+        reactContext
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+            .emit("MY_LOCATION_UPDATED", params)
+    }
+
+    private fun buildNotification(): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Plugador Atômico")
+            .setContentText("GPS ativo")
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_ID, "GPS Plugador", NotificationManager.IMPORTANCE_LOW
+        )
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onDestroy() {
+        if (::locationManager.isInitialized) locationManager.removeUpdates(this)
+        super.onDestroy()
+    }
+}
+```
+
+---
+
+**4. `android/.../gps/GpsModule.kt`**
+
+```kotlin
+package com.plugadoratomico.gps
+
+import android.content.Intent
+import android.os.Build
+import com.facebook.react.bridge.*
+
+class GpsModule(private val reactContext: ReactApplicationContext)
+    : ReactContextBaseJavaModule(reactContext) {
+
+    override fun getName() = "GpsModule"
+
+    @ReactMethod
+    fun startService(options: ReadableMap) {
+        val intent = Intent(reactContext, GpsService::class.java).apply {
+            putExtra("targetPhone",    options.getString("targetPhone"))
+            putExtra("intervalMs",     options.getDouble("intervalMs").toLong())
+            putExtra("subscriptionId", if (options.hasKey("subscriptionId"))
+                options.getInt("subscriptionId") else -1)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            reactContext.startForegroundService(intent)
+        } else {
+            reactContext.startService(intent)
+        }
+    }
+
+    @ReactMethod
+    fun stopService() {
+        reactContext.stopService(Intent(reactContext, GpsService::class.java))
+    }
+
+    @ReactMethod
+    fun requestSingleUpdate() {
+        val intent = Intent(reactContext, GpsService::class.java).apply {
+            putExtra("singleUpdate", true)
+        }
+        reactContext.startService(intent)
+    }
+}
+```
+
+---
+
+**5. `android/.../overlay/OverlayModule.kt`**
+
+```kotlin
+package com.plugadoratomico.overlay
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import com.facebook.react.bridge.*
+
+class OverlayModule(private val reactContext: ReactApplicationContext)
+    : ReactContextBaseJavaModule(reactContext) {
+
+    override fun getName() = "OverlayModule"
+
+    @ReactMethod
+    fun requestOverlayPermission() {
+        val intent = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:${reactContext.packageName}")
+        ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+        reactContext.startActivity(intent)
+    }
+
+    @ReactMethod
+    fun startOverlay(targetPhone: String) {
+        val intent = Intent(reactContext, OverlayService::class.java).apply {
+            putExtra("targetPhone", targetPhone)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            reactContext.startForegroundService(intent)
+        } else {
+            reactContext.startService(intent)
+        }
+    }
+
+    @ReactMethod
+    fun stopOverlay() {
+        reactContext.stopService(Intent(reactContext, OverlayService::class.java))
+    }
+}
+```
+
+---
+
+**6. `android/.../overlay/OverlayService.kt`**
+
+```kotlin
+package com.plugadoratomico.overlay
+
+import android.app.*
+import android.content.Intent
+import android.graphics.PixelFormat
+import android.media.MediaRecorder
+import android.os.Build
+import android.os.IBinder
+import android.view.*
+import android.widget.Button
+import androidx.core.app.NotificationCompat
+import com.plugadoratomico.R
+
+class OverlayService : Service() {
+
+    private lateinit var windowManager: WindowManager
+    private lateinit var overlayView:   View
+    private var mediaRecorder:  MediaRecorder? = null
+    private var isRecording:    Boolean        = false
+    private var targetPhone:    String         = ""
+    private var subscriptionId: Int            = -1
+
+    companion object {
+        const val CHANNEL_ID = "plugador_overlay"
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+        startForeground(1, buildNotification())
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        targetPhone    = intent?.getStringExtra("targetPhone")      ?: targetPhone
+        subscriptionId = intent?.getIntExtra("subscriptionId", -1) ?: -1
+        if (!::overlayView.isInitialized) showOverlay()
+        return START_STICKY
+    }
+
+    private fun showOverlay() {
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        overlayView   = LayoutInflater.from(this).inflate(R.layout.overlay_widget, null)
+
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.END
+            x = 16; y = 100
+        }
+
+        overlayView.setOnTouchListener(DragTouchListener(windowManager, overlayView, params))
+
+        val btnPtt = overlayView.findViewById<Button>(R.id.btn_ptt_overlay)
+        btnPtt.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> { startRecording(); true }
+                MotionEvent.ACTION_UP   -> { stopAndSend();    true }
+                else -> false
+            }
+        }
+
+        windowManager.addView(overlayView, params)
+    }
+
+    private fun startRecording() {
+        if (isRecording) return
+        try {
+            val outputFile = "${cacheDir}/overlay_ptt.3gp"
+            mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                MediaRecorder(this)
+            } else {
+                @Suppress("DEPRECATION") MediaRecorder()
+            }
+            mediaRecorder?.apply {
+                setAudioSource(MediaRecorder.AudioSource.MIC)
+                setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+                setOutputFile(outputFile)
+                prepare()
+                start()
+            }
+            isRecording = true
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
+    private fun stopAndSend() {
+        if (!isRecording) return
+        try {
+            mediaRecorder?.stop()
+            mediaRecorder?.release()
+            mediaRecorder = null
+            isRecording   = false
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
+    private fun buildNotification(): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Plugador Atômico ativo")
+            .setContentText("Toque na bolha para PTT")
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_ID, "Overlay Plugador", NotificationManager.IMPORTANCE_LOW
+        )
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onDestroy() {
+        if (::overlayView.isInitialized) windowManager.removeView(overlayView)
+        super.onDestroy()
+    }
+}
+```
+
+---
+
+**7. `src/services/LocationTracker.js`**
+
+```javascript
+import { NativeModules, DeviceEventEmitter } from 'react-native';
+import { getSavedSubscriptionId } from './Database';
+
+const { GpsModule, SmsSender } = NativeModules;
+
+let intervalId = null;
+
+export function startTracking({ targetPhone, intervalMs = 15000, onMyLocation, subscriptionId = -1 }) {
+  stopTracking();
+
+  const sub = DeviceEventEmitter.addListener('MY_LOCATION_UPDATED', onMyLocation);
+
+  GpsModule?.startService({ targetPhone, intervalMs, subscriptionId });
+
+  return () => {
+    sub.remove();
+    stopTracking();
+  };
+}
+
+export function stopTracking() {
+  GpsModule?.stopService();
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+}
+
+export async function sendLocationOnce(targetPhone) {
+  const subscriptionId = await getSavedSubscriptionId();
+
+  return new Promise((resolve, reject) => {
+    const sub = DeviceEventEmitter.addListener('MY_LOCATION_UPDATED', async ({ lat, lng }) => {
+      sub.remove();
+      try {
+        await SmsSender.sendLocation(targetPhone, lat, lng, subscriptionId);
+        resolve({ lat, lng });
+      } catch (e) {
+        reject(e);
+      }
+    });
+    GpsModule?.requestSingleUpdate();
+  });
+}
+```
+
+---
+
+**8. `src/screens/HomeScreen.jsx`** — passa subscriptionId no tracking e no overlay
+
+```jsx
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  FlatList, StyleSheet, NativeModules, Image
+} from 'react-native';
+import { initMessageRouter, initSentListener, markAsRead } from '../services/MessageRouter';
+import { startTracking, stopTracking, sendLocationOnce } from '../services/LocationTracker';
+import AudioRecorder from '../services/AudioRecorder';
+import { getAllMessages, getProfile, getSavedSubscriptionId } from '../services/Database';
+
+const { SmsSender, OverlayModule } = NativeModules;
+
+export default function HomeScreen({ targetPhone, onOpenProfile }) {
+  const [messages,       setMessages]       = useState([]);
+  const [inputText,      setInputText]      = useState('');
+  const [theirLocation,  setTheirLocation]  = useState(null);
+  const [myLocation,     setMyLocation]     = useState(null);
+  const [isTracking,     setIsTracking]     = useState(false);
+  const [isPressing,     setIsPressing]     = useState(false);
+  const [profile,        setProfile]        = useState(null);
+  const [subscriptionId, setSubscriptionId] = useState(-1);
+  const [overlayActive,  setOverlayActive]  = useState(false);
+  const flatListRef = useRef();
+
+  useEffect(() => {
+    loadAll();
+
+    const cleanupRouter = initMessageRouter({
+      onText:  ({ id, text })        => addMessage({ id, type: 'MSG', payload: text, direction: 'received', status: 'received' }),
+      onVoice: ({ id, audioBase64 }) => handleIncomingVoice(id, audioBase64),
+      onGps:   ({ id, lat, lng })    => {
+        setTheirLocation({ lat, lng });
+        addMessage({ id, type: 'GPS', lat, lng, direction: 'received', status: 'received' });
+      },
+    });
+
+    const cleanupSent = initSentListener();
+
+    return () => {
+      cleanupRouter();
+      cleanupSent();
+    };
+  }, []);
+
+  async function loadAll() {
+    const [rows, p, subId] = await Promise.all([
+      getAllMessages(),
+      getProfile(),
+      getSavedSubscriptionId(),
+    ]);
+    setMessages(rows.map(normalizeRow));
+    setProfile(p);
+    setSubscriptionId(subId);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
+  }
+
+  function normalizeRow(row) {
+    return {
+      id: row.id, type: row.type, direction: row.direction,
+      payload: row.payload, lat: row.lat, lng: row.lng,
+      status: row.status, createdAt: row.created_at,
+    };
+  }
+
+  function addMessage(msg) {
+    setMessages(prev => [...prev, { ...msg, createdAt: Date.now() }]);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+  }
+
+  async function handleIncomingVoice(id, audioBase64) {
+    const pcmBase64 = await NativeModules.Codec2Module.decode(audioBase64);
+    AudioRecorder.play(pcmBase64);
+    addMessage({ id, type: 'VOZ', direction: 'received', status: 'received' });
+  }
+
+  async function sendText() {
+    if (!inputText.trim()) return;
+    await SmsSender.sendText(targetPhone, inputText, subscriptionId);
+    addMessage({ id: `local-${Date.now()}`, type: 'MSG', payload: inputText, direction: 'sent', status: 'sent' });
+    setInputText('');
+  }
+
+  async function onPttRelease() {
+    setIsPressing(false);
+    const audioBase64 = await AudioRecorder.stopAndEncode();
+    if (!audioBase64) return;
+    await SmsSender.sendVoice(targetPhone, audioBase64, subscriptionId);
+    addMessage({ id: `local-${Date.now()}`, type: 'VOZ', direction: 'sent', status: 'sent' });
+  }
+
+  useEffect(() => {
+    messages
+      .filter(m => m.direction === 'received' && m.status === 'received')
+      .forEach(m => markAsRead(m.id));
+  }, [messages]);
+
+  function toggleTracking() {
+    if (isTracking) {
+      stopTracking();
+      setIsTracking(false);
+    } else {
+      startTracking({ targetPhone, intervalMs: 15000, onMyLocation: setMyLocation, subscriptionId });
+      setIsTracking(true);
+    }
+  }
+
+  function toggleOverlay() {
+    if (overlayActive) {
+      OverlayModule?.stopOverlay();
+      setOverlayActive(false);
+    } else {
+      OverlayModule?.startOverlay(targetPhone);
+      setOverlayActive(true);
+    }
+  }
+
+  function renderMessage({ item }) {
+    const isMe = item.direction === 'sent';
+    let content = null;
+
+    if (item.type === 'MSG') {
+      content = <Text style={styles.bubbleText}>{item.payload}</Text>;
+    } else if (item.type === 'VOZ') {
+      content = <Text style={styles.bubbleText}>🎙 Mensagem de voz</Text>;
+    } else if (item.type === 'GPS') {
+      content = <Text style={styles.bubbleText}>📍 {item.lat?.toFixed(4)}, {item.lng?.toFixed(4)}</Text>;
+    } else if (item.type === 'IMG') {
+      content = item.payload
+        ? <Image source={{ uri: `data:image/jpeg;base64,${item.payload}` }} style={styles.bubbleImage} />
+        : <Text style={styles.bubbleText}>🖼 Imagem</Text>;
+    }
+
+    return (
+      <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
+        {content}
+        <View style={styles.bubbleMeta}>
+          <Text style={styles.bubbleTime}>{formatTime(item.createdAt)}</Text>
+          {isMe && (
+            <Text style={styles.bubbleStatus}>
+              {item.status === 'sending' ? '⏳' :
+               item.status === 'sent'    ? '✓'  :
+               item.status === 'error'   ? '✗'  : '✓✓'}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  }
+
+  return (
+    <View style={styles.container}>
+
+      <View style={styles.header}>
+        {profile?.contact_avatar_path
+          ? <Image source={{ uri: profile.contact_avatar_path }} style={styles.avatar} />
+          : <View style={styles.avatarPlaceholder}><Text style={styles.avatarInitial}>?</Text></View>
+        }
+        <View style={{ flex: 1 }}>
+          <Text style={styles.contactName}>{profile?.contact_name ?? targetPhone}</Text>
+          <Text style={styles.contactPhone}>{targetPhone}</Text>
+        </View>
+        <TouchableOpacity onPress={toggleOverlay} style={styles.headerBtn}>
+          <Text style={{ fontSize: 20 }}>{overlayActive ? '🟢' : '⚫'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onOpenProfile} style={styles.headerBtn}>
+          <Text style={{ color: '#e94560', fontSize: 20 }}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.mapArea}>
+        <Text style={styles.mapTitle}>📍 Localizações</Text>
+        {myLocation    && <Text style={styles.locText}>Você: {myLocation.lat.toFixed(4)}, {myLocation.lng.toFixed(4)}</Text>}
+        {theirLocation && <Text style={styles.locText}>{profile?.contact_name ?? 'Contato'}: {theirLocation.lat.toFixed(4)}, {theirLocation.lng.toFixed(4)}</Text>}
+        <View style={styles.locationButtons}>
+          <TouchableOpacity style={styles.btnSecondary} onPress={toggleTracking}>
+            <Text style={styles.btnText}>{isTracking ? '⏹ Parar GPS' : '▶ GPS (15s)'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btnSecondary} onPress={() => sendLocationOnce(targetPhone)}>
+            <Text style={styles.btnText}>📍 Enviar agora</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        keyExtractor={item => item.id}
+        style={styles.chat}
+        renderItem={renderMessage}
+        onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
+      />
+
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.input}
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder="Digite uma mensagem..."
+          placeholderTextColor="#888"
+          multiline
+        />
+        <TouchableOpacity style={styles.btnSend} onPress={sendText}>
+          <Text style={styles.btnText}>➤</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.pttButton, isPressing && styles.pttActive]}
+        onPressIn={() => { setIsPressing(true); AudioRecorder.start(); }}
+        onPressOut={onPttRelease}
+        activeOpacity={0.8}>
+        <Text style={styles.pttText}>
+          {isPressing ? '🔴 Falando...' : '🎙 Segure pra falar'}
+        </Text>
+      </TouchableOpacity>
+
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container:         { flex: 1, backgroundColor: '#0f0f1a' },
+  header:            { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#1a1a2e', gap: 8 },
+  avatar:            { width: 40, height: 40, borderRadius: 20 },
+  avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#e94560', alignItems: 'center', justifyContent: 'center' },
+  avatarInitial:     { color: '#fff', fontWeight: 'bold' },
+  contactName:       { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  contactPhone:      { color: '#888', fontSize: 12 },
+  headerBtn:         { padding: 4 },
+  mapArea:           { padding: 12, backgroundColor: '#1a1a2e', borderBottomWidth: 1, borderColor: '#333' },
+  mapTitle:          { color: '#e94560', fontWeight: 'bold', marginBottom: 4 },
+  locText:           { color: '#ccc', fontSize: 12 },
+  locationButtons:   { flexDirection: 'row', gap: 8, marginTop: 8 },
+  chat:              { flex: 1, padding: 12 },
+  bubble:            { maxWidth: '80%', padding: 10, borderRadius: 12, marginBottom: 8 },
+  bubbleMe:          { backgroundColor: '#e94560', alignSelf: 'flex-end' },
+  bubbleThem:        { backgroundColor: '#2a2a3e', alignSelf: 'flex-start' },
+  bubbleText:        { color: '#fff' },
+  bubbleImage:       { width: 120, height: 120, borderRadius: 8 },
+  bubbleMeta:        { flexDirection: 'row', justifyContent: 'flex-end', gap: 4, marginTop: 4 },
+  bubbleTime:        { color: 'rgba(255,255,255,0.6)', fontSize: 10 },
+  bubbleStatus:      { color: 'rgba(255,255,255,0.6)', fontSize: 10 },
+  inputRow:          { flexDirection: 'row', padding: 8, gap: 8 },
+  input:             { flex: 1, backgroundColor: '#1a1a2e', color: '#fff', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
+  btnSend:           { backgroundColor: '#e94560', borderRadius: 20, padding: 12, justifyContent: 'center' },
+  btnSecondary:      { backgroundColor: '#2a2a3e', borderRadius: 8, padding: 8 },
+  btnText:           { color: '#fff', fontSize: 12 },
+  pttButton:         { margin: 16, backgroundColor: '#e94560', borderRadius: 40, padding: 24, alignItems: 'center' },
+  pttActive:         { backgroundColor: '#c0392b', transform: [{ scale: 0.96 }] },
+  pttText:           { color: '#fff', fontWeight: 'bold', fontSize: 18 },
+});
+```
+
+São 8 arquivos completos. Pode subir o build.
