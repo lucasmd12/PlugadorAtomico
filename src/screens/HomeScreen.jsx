@@ -23,9 +23,7 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
   const flatListRef = useRef();
 
   useEffect(() => {
-    loadHistory();
-    loadProfile();
-    loadSubscriptionId();
+    loadAll();
 
     const cleanupRouter = initMessageRouter({
       onText:  ({ id, text })        => addMessage({ id, type: 'MSG', payload: text, direction: 'received', status: 'received' }),
@@ -44,20 +42,16 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
     };
   }, []);
 
-  async function loadHistory() {
-    const rows = await getAllMessages();
+  async function loadAll() {
+    const [rows, p, subId] = await Promise.all([
+      getAllMessages(),
+      getProfile(),
+      getSavedSubscriptionId(),
+    ]);
     setMessages(rows.map(normalizeRow));
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
-  }
-
-  async function loadProfile() {
-    const p = await getProfile();
     setProfile(p);
-  }
-
-  async function loadSubscriptionId() {
-    const id = await getSavedSubscriptionId();
-    setSubscriptionId(id);
+    setSubscriptionId(subId);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
   }
 
   function normalizeRow(row) {
@@ -105,7 +99,7 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
       stopTracking();
       setIsTracking(false);
     } else {
-      startTracking({ targetPhone, intervalMs: 15000, onMyLocation: setMyLocation });
+      startTracking({ targetPhone, intervalMs: 15000, onMyLocation: setMyLocation, subscriptionId });
       setIsTracking(true);
     }
   }
@@ -115,7 +109,7 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
       OverlayModule?.stopOverlay();
       setOverlayActive(false);
     } else {
-      OverlayModule?.startOverlay();
+      OverlayModule?.startOverlay(targetPhone);
       setOverlayActive(true);
     }
   }
@@ -143,7 +137,9 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
           <Text style={styles.bubbleTime}>{formatTime(item.createdAt)}</Text>
           {isMe && (
             <Text style={styles.bubbleStatus}>
-              {item.status === 'sending' ? '⏳' : item.status === 'sent' ? '✓' : item.status === 'error' ? '✗' : '✓✓'}
+              {item.status === 'sending' ? '⏳' :
+               item.status === 'sent'    ? '✓'  :
+               item.status === 'error'   ? '✗'  : '✓✓'}
             </Text>
           )}
         </View>
@@ -160,7 +156,6 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
   return (
     <View style={styles.container}>
 
-      {/* Cabeçalho */}
       <View style={styles.header}>
         {profile?.contact_avatar_path
           ? <Image source={{ uri: profile.contact_avatar_path }} style={styles.avatar} />
@@ -178,10 +173,9 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
         </TouchableOpacity>
       </View>
 
-      {/* GPS */}
       <View style={styles.mapArea}>
         <Text style={styles.mapTitle}>📍 Localizações</Text>
-        {myLocation && <Text style={styles.locText}>Você: {myLocation.lat.toFixed(4)}, {myLocation.lng.toFixed(4)}</Text>}
+        {myLocation    && <Text style={styles.locText}>Você: {myLocation.lat.toFixed(4)}, {myLocation.lng.toFixed(4)}</Text>}
         {theirLocation && <Text style={styles.locText}>{profile?.contact_name ?? 'Contato'}: {theirLocation.lat.toFixed(4)}, {theirLocation.lng.toFixed(4)}</Text>}
         <View style={styles.locationButtons}>
           <TouchableOpacity style={styles.btnSecondary} onPress={toggleTracking}>
@@ -193,7 +187,6 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
         </View>
       </View>
 
-      {/* Chat */}
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -203,7 +196,6 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
         onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
       />
 
-      {/* Input */}
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
@@ -218,13 +210,14 @@ export default function HomeScreen({ targetPhone, onOpenProfile }) {
         </TouchableOpacity>
       </View>
 
-      {/* PTT */}
       <TouchableOpacity
         style={[styles.pttButton, isPressing && styles.pttActive]}
         onPressIn={() => { setIsPressing(true); AudioRecorder.start(); }}
         onPressOut={onPttRelease}
         activeOpacity={0.8}>
-        <Text style={styles.pttText}>{isPressing ? '🔴 Falando...' : '🎙 Segure pra falar'}</Text>
+        <Text style={styles.pttText}>
+          {isPressing ? '🔴 Falando...' : '🎙 Segure pra falar'}
+        </Text>
       </TouchableOpacity>
 
     </View>
