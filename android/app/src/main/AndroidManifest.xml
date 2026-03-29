@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permissões necessárias para o Plugador Atômico -->
     <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <uses-permission android:name="android.permission.READ_SMS"/>
@@ -8,8 +7,10 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <!-- Permissão especial para desenhar sobre outros apps (overlay) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
 
     <application
         android:name=".MainApplication"
@@ -24,23 +25,20 @@
             </intent-filter>
         </activity>
 
-        <!-- Serviço de overlay — roda em foreground permanentemente -->
         <service
             android:name=".overlay.OverlayService"
             android:exported="false"
             android:foregroundServiceType="specialUse"/>
 
-        <!-- Serviço de GPS em background -->
         <service
             android:name=".gps.GpsService"
             android:exported="false"
             android:foregroundServiceType="location"/>
 
-        <!-- Receiver que intercepta SMS antes do app de mensagens padrão -->
+        <!-- SEM android:permission aqui — era isso que bloqueava o recebimento -->
         <receiver
             android:name=".sms.SmsReceiver"
-            android:exported="true"
-            android:permission="android.permission.BROADCAST_SMS">
+            android:exported="true">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
             </intent-filter>
