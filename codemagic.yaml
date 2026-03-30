@@ -1,6 +1,6 @@
 workflows:
-  plugador-profile:
-    name: Plugador Atômico — Profile APK
+  plugador-debug:  # ← era: plugador-profile
+    name: Plugador Atômico — Debug APK  # ← era: Profile APK
     max_build_duration: 60
 
     environment:
@@ -88,17 +88,17 @@ workflows:
           export PATH=$PWD/gradle-8.1.1/bin:$PATH
           gradle --version
 
-      - name: Build APK Profile
+      - name: Build APK Debug  # ← era: Build APK Profile
         script: |
           export PATH=$PWD/gradle-8.1.1/bin:$PATH
           cd android
           gradle wrapper --gradle-version 8.1.1
           chmod +x gradlew
-          ./gradlew assembleProfile --no-daemon --stacktrace
+          ./gradlew assembleDebug --no-daemon --stacktrace  # ← era: assembleProfile
           find app/build/outputs/apk -name "*.apk" -exec ls -lh {} \;
 
     artifacts:
-      - android/app/build/outputs/apk/profile/*.apk
+      - android/app/build/outputs/apk/debug/*.apk  # ← era: profile/*.apk
 
     publishing:
       email:
