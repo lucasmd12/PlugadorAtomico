@@ -1,0 +1,211 @@
+2026-03-29 21:29:36.317  2422-4925  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:29:37.108  4582-19485 unknown:ReactNative     com.plugadoratomico                  W  The packager does not seem to be running as we got an IOException requesting its status: CLEARTEXT communication to localhost not permitted by network security policy
+2026-03-29 21:29:37.160  4582-4582  unknown:ReactNative     com.plugadoratomico                  W  Packager connection already open, nooping.
+2026-03-29 21:29:37.198  4582-19493 nativeloader            com.plugadoratomico                  D  Load /data/app/~~Uso6LIWWrAMMwy8PeUPc6w==/com.plugadoratomico-LKfw-bTKRHC8XsKHXnzdTQ==/lib/arm64/libreactnativejni.so using class loader ns clns-4 (caller=/data/app/~~Uso6LIWWrAMMwy8PeUPc6w==/com.plugadoratomico-LKfw-bTKRHC8XsKHXnzdTQ==/base.apk): ok
+2026-03-29 21:29:37.262  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.traceupdateoverlay.TraceUpdateOverlayManager
+2026-03-29 21:29:37.273  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.uimanager.LayoutShadowNode
+2026-03-29 21:29:37.283  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.drawer.ReactDrawerLayoutManager
+2026-03-29 21:29:37.285  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.scroll.ReactHorizontalScrollViewManager
+2026-03-29 21:29:37.289  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.scroll.ReactHorizontalScrollContainerViewManager
+2026-03-29 21:29:37.290  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.progressbar.ReactProgressBarViewManager
+2026-03-29 21:29:37.299  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.progressbar.ProgressBarShadowNode
+2026-03-29 21:29:37.300  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.scroll.ReactScrollViewManager
+2026-03-29 21:29:37.304  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.switchview.ReactSwitchManager
+2026-03-29 21:29:37.307  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.switchview.ReactSwitchManager$ReactSwitchShadowNode
+2026-03-29 21:29:37.307  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.swiperefresh.SwipeRefreshLayoutManager
+2026-03-29 21:29:37.309  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.frescosupport.FrescoBasedReactTextInlineImageViewManager
+2026-03-29 21:29:37.309  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.frescosupport.FrescoBasedReactTextInlineImageShadowNode
+2026-03-29 21:29:37.311  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.image.ReactImageManager
+2026-03-29 21:29:37.313  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.modal.ReactModalHostManager
+2026-03-29 21:29:37.314  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.modal.ModalHostShadowNode
+2026-03-29 21:29:37.315  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactRawTextManager
+2026-03-29 21:29:37.315  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactRawTextShadowNode
+2026-03-29 21:29:37.316  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.textinput.ReactTextInputManager
+2026-03-29 21:29:37.320  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.textinput.ReactTextInputShadowNode
+2026-03-29 21:29:37.323  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactTextViewManager
+2026-03-29 21:29:37.327  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactTextShadowNode
+2026-03-29 21:29:37.328  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.view.ReactViewManager
+2026-03-29 21:29:37.331  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactVirtualTextViewManager
+2026-03-29 21:29:37.331  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactVirtualTextShadowNode
+2026-03-29 21:29:37.332  4582-19496 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.unimplementedview.ReactUnimplementedViewManager
+2026-03-29 21:29:37.356  4582-4582  unknown:ReactNative     com.plugadoratomico                  W  Packager connection already open, nooping.
+2026-03-29 21:29:37.619  4582-19495 ReactNativeJNI          com.plugadoratomico                  I  Memory warning (pressure level: TRIM_MEMORY_RUNNING_LOW) received by JS VM, ignoring because it's non-severe
+2026-03-29 21:29:37.623  4582-19495 ReactNativeJS           com.plugadoratomico                  I  Running "PlugadorAtomico
+2026-03-29 21:29:37.711  4582-19495 ReactNativeJNI          com.plugadoratomico                  I  Memory warning (pressure level: TRIM_MEMORY_RUNNING_CRITICAL) received by JS VM, running a GC
+2026-03-29 21:29:41.172  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:41.172  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:41.172  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:44.273  4582-4582  unknown:ReactNative     com.plugadoratomico                  E  Tried to remove non-existent frame callback
+2026-03-29 21:29:44.341  4582-19495 ReactNativeJS           com.plugadoratomico                  I  Running "PlugadorAtomico
+2026-03-29 21:29:47.183  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:47.183  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:47.183  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:49.015  2422-3977  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:29:53.949  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:53.949  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:53.950  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:53.994  4582-4582  plugadoratomico         com.plugadoratomico                  I  hiddenapi: Accessing hidden field Landroid/widget/ScrollView;->mScroller:Landroid/widget/OverScroller; (runtime_flags=0, domain=platform, api=unsupported) from Lcom/facebook/react/views/scroll/ReactScrollView; (domain=app) using reflection: allowed
+2026-03-29 21:29:54.446  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:54.447  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:54.447  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:56.073  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:56.073  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:56.073  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:29:57.122  4582-4582  InputMethodManager      com.plugadoratomico                  D  showSoftInput() view=com.facebook.react.views.textinput.ReactEditText{e08525a VFED..CL. .F.P..ID 96,209-1124,389 #2f5 aid=1073741828} flags=0 reason=SHOW_SOFT_INPUT
+2026-03-29 21:30:02.329  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:02.329  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:02.329  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:04.187  2422-4857  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:30:04.565 20314-20314 ReactNativeFirebaseApp  pid-20314                            D  received application context.
+2026-03-29 21:30:04.912 20314-20314 TechnoTrackerReact      com.nvt.cs                           I  version 2.7.12
+2026-03-29 21:30:04.917 20314-20314 TechnoTrackerReact      com.nvt.cs                           I  [init] obtaining token from repository…
+2026-03-29 21:30:04.917 20314-20314 TechnoTrackerReact      com.nvt.cs                           I  [init] token obtained from repository…
+2026-03-29 21:30:04.917 20314-20314 TechnoTrackerReact      com.nvt.cs                           I  [init] creating finder manager…
+2026-03-29 21:30:04.922 20314-20314 TechnoTrackerReact      com.nvt.cs                           I  [init] finder manager created.
+2026-03-29 21:30:04.922 20314-20314 TechnoTrackerReact      com.nvt.cs                           I  [init] initializing...
+2026-03-29 21:30:05.035 20314-20314 TechnoTrackerReact      com.nvt.cs                           I  [init] initialized successfully
+2026-03-29 21:30:08.241  2422-2566  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:30:08.432  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:08.432  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:08.442  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:09.803  4582-19495 ReactNativeJNI          com.plugadoratomico                  I  Memory warning (pressure level: TRIM_MEMORY_UI_HIDDEN) received by JS VM, ignoring because it's non-severe
+2026-03-29 21:30:14.112  4582-19495 ReactNativeJNI          com.plugadoratomico                  I  Memory warning (pressure level: TRIM_MEMORY_BACKGROUND) received by JS VM, running a GC
+2026-03-29 21:30:15.301 20586-20586 ReactNativeFirebaseApp  pid-20586                            D  received application context.
+2026-03-29 21:30:15.492 20586-20586 TechnoTrackerReact      pid-20586                            I  version 2.7.12
+2026-03-29 21:30:15.493 20586-20586 TechnoTrackerReact      pid-20586                            I  [init] obtaining token from repository…
+2026-03-29 21:30:15.494 20586-20586 TechnoTrackerReact      pid-20586                            I  [init] token obtained from repository…
+2026-03-29 21:30:15.494 20586-20586 TechnoTrackerReact      pid-20586                            I  [init] creating finder manager…
+2026-03-29 21:30:15.496 20586-20586 TechnoTrackerReact      pid-20586                            I  [init] finder manager created.
+2026-03-29 21:30:15.497 20586-20586 TechnoTrackerReact      pid-20586                            I  [init] initializing...
+2026-03-29 21:30:15.575 20586-20586 TechnoTrackerReact      pid-20586                            I  [init] initialized successfully
+2026-03-29 21:30:20.070  2422-4988  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:30:25.047  4582-4582  InputMethodManager      com.plugadoratomico                  D  showSoftInput() view=com.facebook.react.views.textinput.ReactEditText{f18f8aa VFED..CL. .F.P..ID 24,1997-1064,2129 #965 aid=1073741853} flags=0 reason=SHOW_SOFT_INPUT
+2026-03-29 21:30:40.297  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:40.298  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:40.298  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:40.298  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:40.298  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:40.298  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:45.649  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:45.649  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:45.649  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:30:59.663  2422-3317  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:31:01.205  4582-4582  unknown:ReactNative     com.plugadoratomico                  E  Tried to remove non-existent frame callback
+2026-03-29 21:31:01.412  2422-3317  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:31:02.159  2422-4882  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:31:02.325  4582-19495 ReactNativeJS           com.plugadoratomico                  I  Running "PlugadorAtomico
+2026-03-29 21:31:02.505  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:31:02.505  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:31:02.505  4582-19496 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:31:07.264  4582-19495 ReactNativeJS           com.plugadoratomico                  E  '[AudioRecorder] Erro ao gravar/codificar:', [Error: stop failed.]
+2026-03-29 21:31:07.294  4582-19496 unknown:ReactNative     com.plugadoratomico                  E  console.error: [AudioRecorder] Erro ao gravar/codificar: Error: stop failed., js engine: hermes, stack:
+                                                                                                    anonymous@85:100
+                                                                                                    r@83:333
+                                                                                                    u@82:496
+                                                                                                    x@82:1955
+                                                                                                    ?anon_0_@497:655
+                                                                                                    n@388:72
+                                                                                                    s@388:319
+                                                                                                    tryCallOne@53:15
+                                                                                                    anonymous@139:26
+                                                                                                    anonymous@101:1661
+                                                                                                    k@101:497
+                                                                                                    w@101:887
+                                                                                                    callReactNativeMicrotasks@101:3045
+                                                                                                    value@39:2931
+                                                                                                    anonymous@39:1019
+                                                                                                    value@39:2563
+                                                                                                    value@39:978
+                                                                                                    value@39:913
+2026-03-29 21:31:07.389  4582-19496 System.err              com.plugadoratomico                  W  	at com.facebook.react.bridge.JavaMethodWrapper.invoke(JavaMethodWrapper.java:372)
+2026-03-29 21:31:07.389  4582-19496 System.err              com.plugadoratomico                  W  	at com.facebook.react.bridge.JavaModuleWrapper.invoke(JavaModuleWrapper.java:149)
+2026-03-29 21:31:07.389  4582-19496 System.err              com.plugadoratomico                  W  	at com.facebook.react.bridge.queue.MessageQueueThreadHandler.dispatchMessage(MessageQueueThreadHandler.java:27)
+2026-03-29 21:31:07.390  4582-19496 System.err              com.plugadoratomico                  W  	at com.facebook.react.bridge.queue.MessageQueueThreadImpl$4.run(MessageQueueThreadImpl.java:234)
+2026-03-29 21:31:07.391  4582-19495 ReactNativeJS           com.plugadoratomico                  E  '[AudioRecorder] Erro ao gravar/codificar:', [Error: ENOENT: : open failed: ENOENT (No such file or directory), open 'Already stopped']
+2026-03-29 21:31:07.399  4582-19496 unknown:ReactNative     com.plugadoratomico                  E  console.error: [AudioRecorder] Erro ao gravar/codificar: Error: ENOENT: : open failed: ENOENT (No such file or directory), open 'Already stopped', js engine: hermes, stack:
+                                                                                                    anonymous@85:100
+                                                                                                    r@83:333
+                                                                                                    u@82:496
+                                                                                                    x@82:1955
+                                                                                                    ?anon_0_@497:655
+                                                                                                    n@388:72
+                                                                                                    s@388:319
+                                                                                                    tryCallOne@53:15
+                                                                                                    anonymous@139:26
+                                                                                                    anonymous@101:1661
+                                                                                                    k@101:497
+                                                                                                    w@101:887
+                                                                                                    callReactNativeMicrotasks@101:3045
+                                                                                                    value@39:2931
+                                                                                                    anonymous@39:1019
+                                                                                                    value@39:2563
+                                                                                                    value@39:978
+                                                                                                    value@39:913
+2026-03-29 21:31:11.203  4582-19496 System.err              com.plugadoratomico                  W  	at com.facebook.react.bridge.JavaMethodWrapper.invoke(JavaMethodWrapper.java:372)
+2026-03-29 21:31:11.203  4582-19496 System.err              com.plugadoratomico                  W  	at com.facebook.react.bridge.JavaModuleWrapper.invoke(JavaModuleWrapper.java:149)
+2026-03-29 21:31:11.203  4582-19496 System.err              com.plugadoratomico                  W  	at com.facebook.react.bridge.queue.MessageQueueThreadHandler.dispatchMessage(MessageQueueThreadHandler.java:27)
+2026-03-29 21:31:11.203  4582-19496 System.err              com.plugadoratomico                  W  	at com.facebook.react.bridge.queue.MessageQueueThreadImpl$4.run(MessageQueueThreadImpl.java:234)
+2026-03-29 21:31:11.205  4582-19495 ReactNativeJS           com.plugadoratomico                  E  '[AudioRecorder] Erro ao gravar/codificar:', [Error: ENOENT: : open failed: ENOENT (No such file or directory), open 'Already stopped']
+2026-03-29 21:31:11.214  4582-19496 unknown:ReactNative     com.plugadoratomico                  E  console.error: [AudioRecorder] Erro ao gravar/codificar: Error: ENOENT: : open failed: ENOENT (No such file or directory), open 'Already stopped', js engine: hermes, stack:
+                                                                                                    anonymous@85:100
+                                                                                                    r@83:333
+                                                                                                    u@82:496
+                                                                                                    x@82:1955
+                                                                                                    ?anon_0_@497:655
+                                                                                                    n@388:72
+                                                                                                    s@388:319
+                                                                                                    tryCallOne@53:15
+                                                                                                    anonymous@139:26
+                                                                                                    anonymous@101:1661
+                                                                                                    k@101:497
+                                                                                                    w@101:887
+                                                                                                    callReactNativeMicrotasks@101:3045
+                                                                                                    value@39:2931
+                                                                                                    anonymous@39:1019
+                                                                                                    value@39:2563
+                                                                                                    value@39:978
+                                                                                                    value@39:913
+2026-03-29 21:31:14.249  4582-4582  InputMethodManager      com.plugadoratomico                  D  showSoftInput() view=com.facebook.react.views.textinput.ReactEditText{44110ca VFED..CL. .F.P..ID 24,1997-1064,2129 #aff aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
+2026-03-29 21:31:26.030  2422-3317  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:31:26.793  4582-19495 ReactNativeJNI          com.plugadoratomico                  I  Memory warning (pressure level: TRIM_MEMORY_UI_HIDDEN) received by JS VM, ignoring because it's non-severe
+2026-03-29 21:31:26.904  2422-7930  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:31:28.782  2422-4976  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:31:29.391  4582-19495 ReactNativeJNI          com.plugadoratomico                  I  Memory warning (pressure level: TRIM_MEMORY_UI_HIDDEN) received by JS VM, ignoring because it's non-severe
+2026-03-29 21:31:30.234  2422-3317  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:31:30.923  2422-3550  MiuiMultiWindowAdapter  system_server                        D  MiuiMultiWindowAdapter::getCanStartActivityFromFullscreenToFreefromList::LIST_CAN_START_ACTIVITY_FROM_FULLSCREEN_TO_FREEFROM = [com.alipay.android.phone.wallet.aptrip.ui.ApTripActivity, com.alipay.mobile.onsitepay.merge.OnsitepayActivity, com.alipay.mobile.nebulax.integration.mpaas.activity.NebulaActivity$Main, com.alipay.mobile.scan.as.main.MainCaptureActivity]
+2026-03-29 21:31:31.438  4590-22442 unknown:ReactNative     com.plugadoratomico                  W  The packager does not seem to be running as we got an IOException requesting its status: CLEARTEXT communication to localhost not permitted by network security policy
+2026-03-29 21:31:31.491  4590-4590  unknown:ReactNative     com.plugadoratomico                  W  Packager connection already open, nooping.
+2026-03-29 21:31:31.510  4590-22449 nativeloader            com.plugadoratomico                  D  Load /data/app/~~Uso6LIWWrAMMwy8PeUPc6w==/com.plugadoratomico-LKfw-bTKRHC8XsKHXnzdTQ==/lib/arm64/libreactnativejni.so using class loader ns clns-4 (caller=/data/app/~~Uso6LIWWrAMMwy8PeUPc6w==/com.plugadoratomico-LKfw-bTKRHC8XsKHXnzdTQ==/base.apk): ok
+2026-03-29 21:31:31.562  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.traceupdateoverlay.TraceUpdateOverlayManager
+2026-03-29 21:31:31.568  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.uimanager.LayoutShadowNode
+2026-03-29 21:31:31.572  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.drawer.ReactDrawerLayoutManager
+2026-03-29 21:31:31.574  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.scroll.ReactHorizontalScrollViewManager
+2026-03-29 21:31:31.577  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.scroll.ReactHorizontalScrollContainerViewManager
+2026-03-29 21:31:31.578  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.progressbar.ReactProgressBarViewManager
+2026-03-29 21:31:31.579  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.progressbar.ProgressBarShadowNode
+2026-03-29 21:31:31.580  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.scroll.ReactScrollViewManager
+2026-03-29 21:31:31.583  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.switchview.ReactSwitchManager
+2026-03-29 21:31:31.585  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.switchview.ReactSwitchManager$ReactSwitchShadowNode
+2026-03-29 21:31:31.586  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.swiperefresh.SwipeRefreshLayoutManager
+2026-03-29 21:31:31.587  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.frescosupport.FrescoBasedReactTextInlineImageViewManager
+2026-03-29 21:31:31.588  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.frescosupport.FrescoBasedReactTextInlineImageShadowNode
+2026-03-29 21:31:31.589  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.image.ReactImageManager
+2026-03-29 21:31:31.591  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.modal.ReactModalHostManager
+2026-03-29 21:31:31.593  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.modal.ModalHostShadowNode
+2026-03-29 21:31:31.594  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactRawTextManager
+2026-03-29 21:31:31.594  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactRawTextShadowNode
+2026-03-29 21:31:31.594  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.textinput.ReactTextInputManager
+2026-03-29 21:31:31.599  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.textinput.ReactTextInputShadowNode
+2026-03-29 21:31:31.603  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactTextViewManager
+2026-03-29 21:31:31.605  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactTextShadowNode
+2026-03-29 21:31:31.606  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.view.ReactViewManager
+2026-03-29 21:31:31.610  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactVirtualTextViewManager
+2026-03-29 21:31:31.611  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.text.ReactVirtualTextShadowNode
+2026-03-29 21:31:31.611  4590-22452 unknown:Vi...rtyUpdater com.plugadoratomico                  W  Could not find generated setter for class com.facebook.react.views.unimplementedview.ReactUnimplementedViewManager
+2026-03-29 21:31:31.633  4590-4590  unknown:ReactNative     com.plugadoratomico                  W  Packager connection already open, nooping.
+2026-03-29 21:31:31.758  4590-22451 ReactNativeJS           com.plugadoratomico                  I  Running "PlugadorAtomico
+2026-03-29 21:31:32.053  4590-4590  plugadoratomico         com.plugadoratomico                  I  hiddenapi: Accessing hidden field Landroid/widget/ScrollView;->mScroller:Landroid/widget/OverScroller; (runtime_flags=0, domain=platform, api=unsupported) from Lcom/facebook/react/views/scroll/ReactScrollView; (domain=app) using reflection: allowed
+2026-03-29 21:31:32.106  4590-22452 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:31:32.106  4590-22452 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:31:32.106  4590-22452 unknown:ReactNative     com.plugadoratomico                  W  Attempt to set local data for view with unknown tag: -1
+2026-03-29 21:31:33.964  4590-4590  InputMethodManager      com.plugadoratomico                  D  showSoftInput() view=com.facebook.react.views.textinput.ReactEditText{fb2dbe6 VFED..CL. .F.P..ID 24,1997-1064,2129 #4b aid=1073741824} flags=0 reason=SHOW_SOFT_INPUT
